@@ -27,18 +27,18 @@
                     <h4>Add sets</h4>
                     <div class="set-form-block">
                         <label>Exercise:</label>
-                        <input type="text" placeholder="Select Exercise" disabled><br>
+                        <input type="text" name="exercise_id" class="set-exercise" placeholder="Select Exercise" disabled><br>
                         <label>Set repetitions:</label>
-                        <input type="number" name="reps" class="set-reps" class=""><br><br>
+                        <input type="number" name="set_reps" class="set-reps" value="1" min="1"><br><br>
                         <label>Exercise repetitions:</label>
-                        <input type="number" name="rep_nums" class="set-rep-nums" class=""><br>
+                        <input type="number" name="exercise_rep_num" class="set-rep-nums" ><br>
                         or<br>
                         <label>Active time (in seconds):</label>
-                        <input type="number" name="active_time" class="set-active-time" class=""><br><br>
+                        <input type="number" name="active_time" class="set-active-time" ><br><br>
                         <label>Rest time (in seconds):</label>
-                        <input type="number" name="rest_time" class="set-rest-time" class=""><br>
+                        <input type="number" name="rest_time" class="set-rest-time" ><br>
                         <label>Weight (in lbs):</label>
-                        <input type="number" name="weight" class="set-weight" class="">
+                        <input type="number" name="weight" class="set-weight" >
                     </div>
                 </div>
                 <br><button type="button" id="add-set">Add another set</button>

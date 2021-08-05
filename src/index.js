@@ -100,3 +100,58 @@ function renderWorkoutOptions() {
     })
 }
 renderWorkoutOptions()
+
+function createExerciseSet(htmlExerciseSetFormBlock, blockId) {
+    const inputsArray = Array.from(htmlExerciseSetFormBlock.querySelectorAll('input'))
+    const inputValuesArray = inputsArray.map(inputElement => inputElement.value )
+    const [ exercise_id, set_reps, exercise_rep_num, active_time, rest_time, weight ] = inputValuesArray
+    
+    // create Set
+    const data = {
+        exercise_id: exercise_id,
+        exercise_rep_num: exercise_rep_num,
+        active_time: active_time,
+        rest_time: rest_time,
+        weight: weight,
+    }
+
+    fetch('http://127.0.0.1:3000/exercise_sets', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            "Accept": "application/json"
+        },
+        body: JSON.stringify(data)
+    })
+    .then(response => response.json())
+    .then(data => {
+        // create SetRepetition(s)
+        const setRepData = {
+            block_id: blockId,
+            exercise_set_id: data.id,
+        }
+
+        for (let i = 0; i < set_reps; i++) {
+            fetch('http://127.0.0.1:3000/set_repetitions', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    "Accept": "application/json"
+                },
+                body: JSON.stringify(setRepData)
+            })
+        }
+    })
+    // debugger
+}
+
+blockExerciseSetForm.addEventListener('submit', function(event) {
+    event.preventDefault()
+    
+    const [ blockNameInput, selectedWorkoutInput ] = event.target
+
+    // post request -- create new Block + WorkoutBlock
+
+    // .then -> use createExerciseSet(..args..) -- pass in the new block's id
+    debugger
+})
