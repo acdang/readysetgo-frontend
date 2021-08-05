@@ -224,7 +224,8 @@ blockExerciseSetForm.addEventListener('submit', function(event) {
             createExerciseSet(inputValues, newBlock.id)
         })
 
-        workoutCard = document.querySelector(`div.card[data-a="${selectedWorkoutId}"]`)
+        workoutCard = document.querySelector(`div.card[data-id="${selectedWorkoutId}"]`)
+        // debugger
         renderBlock(newBlock, workoutCard)
     })
     // debugger
@@ -265,8 +266,8 @@ function renderWorkoutDisplayCard(workoutObject) {
     workoutName.textContent = workoutObject.name
     workoutCard.appendChild(workoutName)
 
-    const blocksArray = workoutObject.blocks // in order to do this, need to have :blocks attr in Workout serializer
-
+    const blocksArray = workoutObject.blocks // need to have `has_many :blocks` in Workout serializer
+    // debugger
     // render each block
     if (blocksArray) {
         blocksArray.forEach(function(block) {
@@ -279,16 +280,17 @@ function renderWorkoutDisplayCard(workoutObject) {
 
 function renderBlock(block, workoutCard) {
     const blockName = document.createElement('h3')
+    blockName.textContent = block.name
 
     // in each block, render ExerciseSets
     const exerciseSetsDisplay = document.createElement('ul')
 
-    const exerciseSetsArray = block.exercise_sets // need to have :exercise_sets attr in Block serializer
-    debugger
-    exerciseSetsArray.forEach(function(exerciseSet) {
+    const exerciseSetsArray = block.exercise_sets // need to have `has_many :exercise_sets` in Block serializer
+    // debugger
+    exerciseSetsArray.forEach(function(exerciseSet) { // need to have `has_one :exercise` in ExerciseSet serializer
+        // debugger
         const oneSetDisplay = document.createElement('li')
         oneSetDisplay.textContent = `${exerciseSet.exercise.name}, ${exerciseSet.exercise_rep_num} repetition(s)`
-        
         exerciseSetsDisplay.appendChild(oneSetDisplay)
         workoutCard.append(blockName, exerciseSetsDisplay)
     })
