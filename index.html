@@ -8,10 +8,42 @@
         <div>
             <form class="create-workout-form">
                 <h3>Create New Workout</h3>
-
-                <!-- somehow make this have default name if user doesn't enter (e.g., Workout 1)-->
+                <label>Workout name:</label>
                 <input type="text" name="name" id="workout-name" class="">
                 <input type="submit" name="submit" value="Create New Workout" class="">
+            </form>
+        </div>
+
+        <div>
+            <form class="create-block-set-form">
+                <h3>Create New Block</h3>
+                <label>Block name:</label>
+                <input type="text" name="name" id="block-name" class=""><br>
+                <label>Add block to workout:</label>
+                <select name="workout_id" class="block-exercise-select">
+
+                </select>
+                <div class="set-form-container" style="background-color: lightgray;">
+                    <h4>Add sets</h4>
+                    <div class="set-form-block">
+                        <label>Exercise:</label>
+                        <input type="text" placeholder="Select Exercise" disabled><br>
+                        <label>Set repetitions:</label>
+                        <input type="number" name="reps" class="set-reps" class=""><br><br>
+                        <label>Exercise repetitions:</label>
+                        <input type="number" name="rep_nums" class="set-rep-nums" class=""><br>
+                        or<br>
+                        <label>Active time (in seconds):</label>
+                        <input type="number" name="active_time" class="set-active-time" class=""><br><br>
+                        <label>Rest time (in seconds):</label>
+                        <input type="number" name="rest_time" class="set-rest-time" class=""><br>
+                        <label>Weight (in lbs):</label>
+                        <input type="number" name="weight" class="set-weight" class="">
+                    </div>
+                </div>
+                <br><button type="button" id="add-set">Add another set</button>
+                <br><br>
+                <input type="submit" name="submit" value="Create New Block" class="">
             </form>
         </div>
     </body>
