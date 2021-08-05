@@ -5,6 +5,9 @@
         <script src="src/index.js" defer></script>
     </head>
     <body>
+        <div class="workout-display">
+            
+        </div>
         <div>
             <form class="create-workout-form">
                 <h3>Create New Workout</h3>
@@ -27,7 +30,11 @@
                     <h4>Add sets</h4>
                     <div class="set-form-block">
                         <label>Exercise:</label>
-                        <input type="text" name="exercise_id" class="set-exercise" placeholder="Select Exercise" disabled><br>
+                        <!-- change this later (below) -->
+                        <select name="exercise_id" class="set-exercise-select">
+
+                        </select><br>
+                        <!-- <input type="text" name="exercise_id" class="set-exercise" placeholder="Select Exercise" disabled><br> -->
                         <label>Set repetitions:</label>
                         <input type="number" name="set_reps" class="set-reps" value="1" min="1"><br><br>
                         <label>Exercise repetitions:</label>

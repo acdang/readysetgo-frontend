@@ -5,9 +5,16 @@ const addExerciseSetButton = document.querySelector('button#add-set')
 const exerciseSetFormBlock = document.querySelector('div.set-form-block')
 const exerciseSetFormContainer = document.querySelector('div.set-form-container')
 const blockWorkoutSelectInput = document.querySelector('select.block-exercise-select')
+const exerciseSetExerciseSelectInput = document.querySelector('select.set-exercise-select')
+const workoutDisplay = document.querySelector('div.workout-display')
 
 function fetchWorkouts() {
     return fetch('http://127.0.0.1:3000/workouts')
+    .then(resp => resp.json())
+}
+
+function fetchExercises() {
+    return fetch('http://127.0.0.1:3000/exercises')
     .then(resp => resp.json())
 }
 
@@ -50,7 +57,9 @@ workoutForm.addEventListener('submit', function(event) {
     })
     .then(response => response.json())
     .then(data => {
+        // debugger
         createWorkoutOption(data)
+        renderWorkoutDisplayCard(data)
     })
     
     // add newest workout to workout options in Block form select input
@@ -65,7 +74,7 @@ workoutForm.addEventListener('submit', function(event) {
 // show Block/Set form if at least 1 workout exists
 fetchWorkouts().then(function(workoutsArray) {
     if (workoutsArray.length > 0) {
-        console.log("Hello!")
+        console.log("Line 74")
     }
 })
 
@@ -84,9 +93,11 @@ function createWorkoutOption(workoutObject) {
     const newOption = document.createElement('option')
     // assign name & id to option
     newOption.value = workoutObject.id
+    // debugger
     newOption.textContent = workoutObject.name
     // append to select input
     blockWorkoutSelectInput.appendChild(newOption)
+    // debugger
 }
 
 // on page load
@@ -100,20 +111,23 @@ function renderWorkoutOptions() {
 }
 renderWorkoutOptions()
 
-function createExerciseSet(htmlExerciseSetFormBlock, blockId) {
-    const inputsArray = Array.from(htmlExerciseSetFormBlock.querySelectorAll('input'))
-    const inputValuesArray = inputsArray.map(inputElement => inputElement.value )
-    const [ exercise_id, set_reps, exercise_rep_num, active_time, rest_time, weight ] = inputValuesArray
-    
+function createExerciseSet(inputValuesArray, blockId) {
+    // const selectInput = htmlExerciseSetFormBlock.querySelector('select')
+    // const inputsArray = Array.from(htmlExerciseSetFormBlock.querySelectorAll('input'))
+    // const inputValuesArray = inputsArray.map(inputElement => inputElement.value )
+    const [ exerciseId, setReps, exerciseRepNum, activeTime, restTime, weight ] = inputValuesArray
+    // console.log(exercise_rep_num)
+
     // create Set
+    // debugger
     const data = {
-        exercise_id: exercise_id,
-        exercise_rep_num: exercise_rep_num,
-        active_time: active_time,
-        rest_time: rest_time,
+        exercise_id: Number(exerciseId),
+        exercise_rep_num: exerciseRepNum,
+        active_time: activeTime,
+        rest_time: restTime,
         weight: weight,
     }
-
+    // debugger
     fetch('http://127.0.0.1:3000/exercise_sets', {
         method: 'POST',
         headers: {
@@ -124,13 +138,14 @@ function createExerciseSet(htmlExerciseSetFormBlock, blockId) {
     })
     .then(response => response.json())
     .then(data => {
+        // debugger
         // create SetRepetition(s)
         const setRepData = {
             block_id: blockId,
             exercise_set_id: data.id,
         }
-
-        for (let i = 0; i < set_reps; i++) {
+        // debugger
+        for (let i = 0; i < setReps; i++) {
             fetch('http://127.0.0.1:3000/set_repetitions', {
                 method: 'POST',
                 headers: {
@@ -158,10 +173,30 @@ function createWorkoutBlock(blockId, workoutId) {
         },
         body: JSON.stringify(workoutBlockData)
     })
+    // .then(resp => resp.json())
+    // .then(data => console.log(data))
+    // debugger
 }
 
 blockExerciseSetForm.addEventListener('submit', function(event) {
     event.preventDefault()
+
+    // get array of all ExerciseSet html formblocks 
+    const allSetFormBlocks = Array.from(event.target.querySelectorAll('div.set-form-block'))
+    // for each formblock in the array, create array of input values
+    const inputValuesArray = allSetFormBlocks.map(function(setFormBlock) {
+        const selectInput = Number(setFormBlock.querySelector('select').value)
+        const inputsArray = Array.from(setFormBlock.querySelectorAll('input'))
+        const inputFields = inputsArray.map(inputElement => {
+            if (inputElement.value !== "") {
+                return Number(inputElement.value)
+            } else {
+                return null
+            }
+        })
+        // debugger
+        return [selectInput, ...inputFields]
+    })
     
     // selectedWorkoutInput NEEDS to have id as value
     const [ blockNameInput, selectedWorkoutInput ] = event.target
@@ -177,10 +212,92 @@ blockExerciseSetForm.addEventListener('submit', function(event) {
     })
     .then(response => response.json())
     .then(newBlock => {
-        createWorkoutBlock(newBlock.id, selectedWorkoutInput.value)
+        // debugger
+        const selectedWorkoutId = Number(selectedWorkoutInput.value)
+        createWorkoutBlock(newBlock.id, selectedWorkoutId)
 
-        // use createExerciseSet(..args..) for EACH exerciseSetFormBlock -- pass in the new block's id
+        // debugger
 
+        // create an exercise set for every ExerciseSet formblock
+        inputValuesArray.forEach(function(inputValues) {
+            // debugger
+            createExerciseSet(inputValues, newBlock.id)
+        })
+
+        workoutCard = document.querySelector(`div.card[data-a="${selectedWorkoutId}"]`)
+        renderBlock(newBlock, workoutCard)
     })
+    // debugger
+    event.target.reset()
+})
+
+// can prob combine this with renderWorkoutOptions() ?
+// on page load
+function renderExerciseOptions() {
+    // add exercise options to select input in ExerciseSet form
+    fetchExercises().then(function(exercisesArray) {
+        exercisesArray.forEach(function(exerciseObj) {
+            createExerciseOption(exerciseObj)
+        })
+    })
+}
+renderExerciseOptions()
+
+// can prob combine this with createWorkoutOption() ?
+function createExerciseOption(exerciseObject) {
+    // create option
+    const newOption = document.createElement('option')
+    // assign name & id to option
+    newOption.value = exerciseObject.id
+    newOption.textContent = exerciseObject.name
+    // append to select input
+    exerciseSetExerciseSelectInput.appendChild(newOption)
+}
+
+function renderWorkoutDisplayCard(workoutObject) {
+    console.log("entered")
+    // debugger
+    const workoutCard = document.createElement('div')
+    workoutCard.className = 'card'
+    workoutCard.dataset.id =  workoutObject.id
+    
+    const workoutName = document.createElement('h2')
+    workoutName.textContent = workoutObject.name
+    workoutCard.appendChild(workoutName)
+
+    const blocksArray = workoutObject.blocks // in order to do this, need to have :blocks attr in Workout serializer
+
+    // render each block
+    if (blocksArray) {
+        blocksArray.forEach(function(block) {
+            renderBlock(block, workoutCard)
+        })
+    }
+    // debugger
+    workoutDisplay.appendChild(workoutCard)
+}
+
+function renderBlock(block, workoutCard) {
+    const blockName = document.createElement('h3')
+
+    // in each block, render ExerciseSets
+    const exerciseSetsDisplay = document.createElement('ul')
+
+    const exerciseSetsArray = block.exercise_sets // need to have :exercise_sets attr in Block serializer
     debugger
+    exerciseSetsArray.forEach(function(exerciseSet) {
+        const oneSetDisplay = document.createElement('li')
+        oneSetDisplay.textContent = `${exerciseSet.exercise.name}, ${exerciseSet.exercise_rep_num} repetition(s)`
+        
+        exerciseSetsDisplay.appendChild(oneSetDisplay)
+        workoutCard.append(blockName, exerciseSetsDisplay)
+    })
+}
+
+// render all workout cards
+fetchWorkouts().then(function(workoutsArray) {
+    workoutsArray.forEach(function(workoutObj) {
+        renderWorkoutDisplayCard(workoutObj)
+    })
+    console.log("working!")
 })
