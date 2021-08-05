@@ -53,12 +53,11 @@ workoutForm.addEventListener('submit', function(event) {
         createWorkoutOption(data)
     })
     
-    
     // add newest workout to workout options in Block form select input
-    fetchWorkouts().then(function(workoutsArray) {
-        const newestWorkoutObj = workoutsArray[workoutsArray.length - 1]
-        createWorkoutOption(newestWorkoutObj)
-    })
+    // fetchWorkouts().then(function(workoutsArray) {
+    //     const newestWorkoutObj = workoutsArray[workoutsArray.length - 1]
+    //     createWorkoutOption(newestWorkoutObj)
+    // })
 
     event.target.reset()
 })
@@ -145,13 +144,43 @@ function createExerciseSet(htmlExerciseSetFormBlock, blockId) {
     // debugger
 }
 
+function createWorkoutBlock(blockId, workoutId) {
+    const workoutBlockData = {
+        block_id: blockId,
+        workout_id: workoutId,
+    }
+
+    fetch('http://127.0.0.1:3000/workout_blocks', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            "Accept": "application/json"
+        },
+        body: JSON.stringify(workoutBlockData)
+    })
+}
+
 blockExerciseSetForm.addEventListener('submit', function(event) {
     event.preventDefault()
     
+    // selectedWorkoutInput NEEDS to have id as value
     const [ blockNameInput, selectedWorkoutInput ] = event.target
 
     // post request -- create new Block + WorkoutBlock
+    fetch('http://127.0.0.1:3000/blocks', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            "Accept": "application/json"
+        },
+        body: JSON.stringify({ name: blockNameInput.value })
+    })
+    .then(response => response.json())
+    .then(newBlock => {
+        createWorkoutBlock(newBlock.id, selectedWorkoutInput.value)
 
-    // .then -> use createExerciseSet(..args..) -- pass in the new block's id
+        // use createExerciseSet(..args..) for EACH exerciseSetFormBlock -- pass in the new block's id
+
+    })
     debugger
 })
