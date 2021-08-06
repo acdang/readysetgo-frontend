@@ -6,7 +6,7 @@
     </head>
     <body>
         <div class="workout-display">
-            
+
         </div>
         <div>
             <form class="create-workout-form">
@@ -21,7 +21,7 @@
             <form class="create-block-set-form">
                 <h3>Create New Block</h3>
                 <label>Block name:</label>
-                <input type="text" name="name" id="block-name" class=""><br>
+                <input type="text" name="name" id="block-name" placeholder="Custom name (opt.)" class=""><br>
                 <label>Add block to workout:</label>
                 <select name="workout_id" class="block-exercise-select">
 
@@ -32,7 +32,7 @@
                         <label>Exercise:</label>
                         <!-- change this later (below) -->
                         <select name="exercise_id" class="set-exercise-select">
-
+                            <option value="" selected disabled>Please select</option>
                         </select><br>
                         <!-- <input type="text" name="exercise_id" class="set-exercise" placeholder="Select Exercise" disabled><br> -->
                         <label>Set repetitions:</label>

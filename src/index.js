@@ -13,6 +13,14 @@ function fetchWorkouts() {
     .then(resp => resp.json())
 }
 
+function fetchWorkoutById(id) {
+    return fetchWorkouts()
+    .then(workoutsArray => {
+        // debugger
+        return workoutsArray.find(workoutObj => workoutObj.id == id)
+    })
+}
+
 function fetchExercises() {
     return fetch('http://127.0.0.1:3000/exercises')
     .then(resp => resp.json())
@@ -111,7 +119,7 @@ function renderWorkoutOptions() {
 }
 renderWorkoutOptions()
 
-function createExerciseSet(inputValuesArray, blockId) {
+function createExerciseSet(inputValuesArray, blockId, exerciseSetDisplayUl) {
     // const selectInput = htmlExerciseSetFormBlock.querySelector('select')
     // const inputsArray = Array.from(htmlExerciseSetFormBlock.querySelectorAll('input'))
     // const inputValuesArray = inputsArray.map(inputElement => inputElement.value )
@@ -138,6 +146,7 @@ function createExerciseSet(inputValuesArray, blockId) {
     })
     .then(response => response.json())
     .then(data => {
+        // render set listings in workout card
         // debugger
         // create SetRepetition(s)
         const setRepData = {
@@ -154,6 +163,7 @@ function createExerciseSet(inputValuesArray, blockId) {
                 },
                 body: JSON.stringify(setRepData)
             })
+            renderSet(data, exerciseSetDisplayUl)
         }
     })
     // debugger
@@ -200,36 +210,43 @@ blockExerciseSetForm.addEventListener('submit', function(event) {
     
     // selectedWorkoutInput NEEDS to have id as value
     const [ blockNameInput, selectedWorkoutInput ] = event.target
+    const selectedWorkoutId = Number(selectedWorkoutInput.value)
 
-    // post request -- create new Block + WorkoutBlock
-    fetch('http://127.0.0.1:3000/blocks', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            "Accept": "application/json"
-        },
-        body: JSON.stringify({ name: blockNameInput.value })
-    })
-    .then(response => response.json())
-    .then(newBlock => {
+    fetchWorkoutById(selectedWorkoutInput.value).then(workoutObj => {
+        if (blockNameInput.value === "") {
+            blockName = `Exercise Block ${workoutObj.blocks.length + 1}`
+        } else {
+            blockName = blockNameInput.value
+        }
         // debugger
-        const selectedWorkoutId = Number(selectedWorkoutInput.value)
-        createWorkoutBlock(newBlock.id, selectedWorkoutId)
-
-        // debugger
-
-        // create an exercise set for every ExerciseSet formblock
-        inputValuesArray.forEach(function(inputValues) {
-            // debugger
-            createExerciseSet(inputValues, newBlock.id)
+        // post request -- create new Block + WorkoutBlock
+        fetch('http://127.0.0.1:3000/blocks', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                "Accept": "application/json"
+            },
+            body: JSON.stringify({ name: blockName })
         })
+        .then(response => response.json())
+        .then(newBlock => {
+            createWorkoutBlock(newBlock.id, selectedWorkoutId)
 
-        workoutCard = document.querySelector(`div.card[data-id="${selectedWorkoutId}"]`)
+            // debugger
+            workoutCard = document.querySelector(`div.card[data-id="${selectedWorkoutId}"]`)
+            renderBlock(newBlock, workoutCard)
+            const exerciseSetDisplayUl = workoutCard.querySelector(`ul[data-id="${newBlock.id}"]`)
+
+            // create an exercise set for every ExerciseSet formblock
+            inputValuesArray.forEach(function(inputValues) {
+                // debugger
+                createExerciseSet(inputValues, newBlock.id, exerciseSetDisplayUl)
+            })
+            
+        })
         // debugger
-        renderBlock(newBlock, workoutCard)
+        event.target.reset()
     })
-    // debugger
-    event.target.reset()
 })
 
 // can prob combine this with renderWorkoutOptions() ?
@@ -284,16 +301,21 @@ function renderBlock(block, workoutCard) {
 
     // in each block, render ExerciseSets
     const exerciseSetsDisplay = document.createElement('ul')
+    exerciseSetsDisplay.dataset.id = block.id
 
     const exerciseSetsArray = block.exercise_sets // need to have `has_many :exercise_sets` in Block serializer
     // debugger
     exerciseSetsArray.forEach(function(exerciseSet) { // need to have `has_one :exercise` in ExerciseSet serializer
         // debugger
-        const oneSetDisplay = document.createElement('li')
-        oneSetDisplay.textContent = `${exerciseSet.exercise.name}, ${exerciseSet.exercise_rep_num} repetition(s)`
-        exerciseSetsDisplay.appendChild(oneSetDisplay)
-        workoutCard.append(blockName, exerciseSetsDisplay)
+        renderSet(exerciseSet, exerciseSetsDisplay)
     })
+    workoutCard.append(blockName, exerciseSetsDisplay)
+}
+
+function renderSet(exerciseSet, exerciseSetsDisplay) {
+    const oneSetDisplay = document.createElement('li')
+    oneSetDisplay.textContent = `${exerciseSet.exercise.name}, ${exerciseSet.exercise_rep_num} repetition(s)`
+    exerciseSetsDisplay.appendChild(oneSetDisplay)
 }
 
 // render all workout cards
