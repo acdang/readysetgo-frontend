@@ -7,6 +7,7 @@ const exerciseSetFormContainer = document.querySelector('div.set-form-container'
 const blockWorkoutSelectInput = document.querySelector('select.block-exercise-select')
 const exerciseSetExerciseSelectInput = document.querySelector('select.set-exercise-select')
 const workoutDisplay = document.querySelector('div.workout-display')
+const workoutViewContainer = document.querySelector('div.workout-view')
 
 async function fetchWorkouts() {
     const resp = await fetch('http://127.0.0.1:3000/workouts')
@@ -123,13 +124,13 @@ fetchWorkouts().then(function(workoutsArray) {
 })
 
 // create a new ExerciseSet & render ExerciseSet details in Workout display card
-function createExerciseSet(inputValuesArray, blockId, exerciseSetDisplayUl) {
+async function createExerciseSet(inputValuesArray, blockId, exerciseSetDisplayList) {
     const [ exerciseId, setReps, exerciseRepNum, activeTime, restTime, weight ] = inputValuesArray
-    // console.log(exerciseRepNum)
+    console.log(`creating: ${inputValuesArray}`)
     // debugger
 
     // create ExerciseSet
-    const data = {
+    const exerciseSetData = {
         exercise_id: Number(exerciseId),
         exercise_rep_num: exerciseRepNum,
         active_time: activeTime,
@@ -137,19 +138,21 @@ function createExerciseSet(inputValuesArray, blockId, exerciseSetDisplayUl) {
         weight: weight,
     }
     // debugger
-    fetch('http://127.0.0.1:3000/exercise_sets', {
+    const response = await fetch('http://127.0.0.1:3000/exercise_sets', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
             "Accept": "application/json"
         },
-        body: JSON.stringify(data)
+        body: JSON.stringify(exerciseSetData)
     })
-    .then(response => response.json())
-    .then(data => {
+    const data = await response.json()
+    // .then(data => {
         // render ExerciseSet details in Workout displaycard
 
         // debugger
+        console.log(data.id)
+        console.log(data.exercise.name)
 
         // create SetRepetition(s)
         const setRepData = {
@@ -166,9 +169,9 @@ function createExerciseSet(inputValuesArray, blockId, exerciseSetDisplayUl) {
                 },
                 body: JSON.stringify(setRepData)
             })
-            renderSet(data, exerciseSetDisplayUl)
+            renderSet(data, exerciseSetDisplayList)
         }
-    })
+    // })
     // debugger
 }
 
@@ -240,14 +243,16 @@ blockExerciseSetForm.addEventListener('submit', function(event) {
             // debugger
 
             // render Block in the associated Workout display card
-            workoutCard = document.querySelector(`div.card[data-id="${selectedWorkoutId}"]`)
-            renderBlock(newBlock, workoutCard)
-            const exerciseSetDisplayUl = workoutCard.querySelector(`ul[data-id="${newBlock.id}"]`)
+            workoutCardInfoContainer = document.querySelector(`div.card[data-id="${selectedWorkoutId}"] div.workout-info-top`)
+            renderBlock(newBlock, workoutCardInfoContainer)
+            const exerciseSetDisplayList = workoutCardInfoContainer.querySelector(`ol[data-id="${newBlock.id}"]`)
 
+            // debugger
+            // console.log(`exerciseSetDisplayList: ${exerciseSetDisplayList}`)
             // create an ExerciseSet for every inputted ExerciseSet html input block
-            inputValuesArray.forEach(function(inputValues) {
-                // debugger
-                createExerciseSet(inputValues, newBlock.id, exerciseSetDisplayUl)
+            inputValuesArray.forEach(function(inputValues) { // IN ORDER HERE
+                console.log(`Loop: ${inputValues}`)
+                createExerciseSet(inputValues, newBlock.id, exerciseSetDisplayList)
             })
             
         })
@@ -281,24 +286,39 @@ function createExerciseOption(exerciseObject) {
 function renderWorkoutDisplayCard(workoutObject) {
     // console.log("entered")
     // debugger
-    const workoutCard = document.createElement('div')
-    workoutCard.className = 'card'
-    workoutCard.dataset.id =  workoutObject.id
+    const outerDiv = document.createElement('div')
+    outerDiv.dataset.id =  workoutObject.id
+    outerDiv.className = 'card'
+    
+    const workoutCardInfo = document.createElement('div')
+    workoutCardInfo.className = 'workout-info-top'
     
     const workoutName = document.createElement('h2')
     workoutName.textContent = workoutObject.name
-    workoutCard.appendChild(workoutName)
+    workoutName.className = "workout-name"
+    workoutCardInfo.appendChild(workoutName)
 
     const blocksArray = workoutObject.blocks // need to have `has_many :blocks` in Workout serializer
     // debugger
     // render each Block in current Workout
     if (blocksArray) {
         blocksArray.forEach(function(block) {
-            renderBlock(block, workoutCard)
+            renderBlock(block, workoutCardInfo)
         })
     }
     // debugger
-    workoutDisplay.appendChild(workoutCard)
+    outerDiv.appendChild(workoutCardInfo)
+    
+    
+    // view button
+    const buttonDiv = document.createElement('div')
+    buttonDiv.className = 'button-flex-end'
+    const viewButton = document.createElement('button')
+    viewButton.textContent = "View Workout"
+
+    buttonDiv.appendChild(viewButton)
+    outerDiv.appendChild(buttonDiv)
+    workoutDisplay.appendChild(outerDiv)
 }
 
 // render Block details in the associated Workout display card
@@ -307,10 +327,13 @@ function renderBlock(block, workoutCard) {
     blockName.textContent = block.name
 
     // in each block, render container to store ExerciseSets
-    const exerciseSetsDisplay = document.createElement('ul')
+    const exerciseSetsDisplay = document.createElement('ol')
     exerciseSetsDisplay.dataset.id = block.id
 
     const exerciseSetsArray = block.exercise_sets // need to have `has_many :exercise_sets` in Block serializer
+    exerciseSetsArray.sort(function(a, b) { 
+        return a.id - b.id
+      })
     // debugger
 
     // for each ExceriseSet in current Block, render its details within Block display of Workout display card
@@ -333,5 +356,31 @@ fetchWorkouts().then(function(workoutsArray) {
     workoutsArray.forEach(function(workoutObj) {
         renderWorkoutDisplayCard(workoutObj)
     })
-    console.log("working!")
+    // console.log("working!")
+})
+
+// clicking on "View Workout" button on a Workout display card shows the specific Workout info card below
+workoutDisplay.addEventListener('click', function(event) {
+    if (event.target.matches('button')) {
+        // display the specific Workout view card
+        workoutViewContainer.style.display = 'block'
+
+        // get specific Workout card
+        const selectedCard = event.target.closest('div').parentElement
+
+        // get Workout object
+        fetchWorkoutById(selectedCard.dataset.id).then(workoutObject => {
+            // display Workout name
+            const viewWorkoutName = workoutViewContainer.querySelector('div.view-card h2#specific-workout-name')
+            viewWorkoutName.textContent = workoutObject.name
+        })
+        
+    }
+})
+
+// clicking "X" button on specific Workout info card closes the display
+const closeDisplayButtom = workoutViewContainer.querySelector('button#close-display')
+
+closeDisplayButtom.addEventListener('click', function() {
+    workoutViewContainer.style.display = 'none'
 })

@@ -12,3 +12,51 @@
     margin: 1rem 2rem;
     box-shadow: 3px 4px black;
 }
+
+.view-card {
+    /* text-align: center; */
+    border: grey solid 1px;
+    padding: 1rem;
+    width: 80%;
+    /* height: 25rem; */
+    display: flex;
+    flex-direction: column;
+    margin: 1rem 2rem;
+    box-shadow: 3px 4px black;
+}
+
+.workout-view {
+    display: none;
+}
+
+.row {
+    display: flex;
+    flex-direction: row;
+}
+
+.column {
+    height: 10rem;
+}
+
+#workout-info-side {
+    background-color: olive;
+    width: 40%;
+}
+
+#exercise-info-side {
+    background-color: powderblue;
+    width: 60%;
+}
+
+.button-flex-end {
+    display: flex;
+    justify-content: flex-end;
+}
+
+.edit-set-form {
+    display: none;
+}
+
+.exercise-display {
+    display: none;
+}
