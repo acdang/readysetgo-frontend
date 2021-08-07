@@ -124,55 +124,45 @@ fetchWorkouts().then(function(workoutsArray) {
 })
 
 // create a new ExerciseSet & render ExerciseSet details in Workout display card
-async function createExerciseSet(inputValuesArray, blockId, exerciseSetDisplayList) {
-    const [ exerciseId, setReps, exerciseRepNum, activeTime, restTime, weight ] = inputValuesArray
-    console.log(`creating: ${inputValuesArray}`)
-    // debugger
-
-    // create ExerciseSet
-    const exerciseSetData = {
-        exercise_id: Number(exerciseId),
-        exercise_rep_num: exerciseRepNum,
-        active_time: activeTime,
-        rest_time: restTime,
-        weight: weight,
-    }
-    // debugger
+async function createExerciseSet(objectsArray, blockId, exerciseSetDisplayList) {
+    
+    // into body, passing in a hash that contains a hash with a key pointing to an array of hashes
     const response = await fetch('http://127.0.0.1:3000/exercise_sets', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
             "Accept": "application/json"
         },
-        body: JSON.stringify(exerciseSetData)
+        body: JSON.stringify({ exercise_set: { object_array: objectsArray } })
     })
-    const data = await response.json()
-    // .then(data => {
-        // render ExerciseSet details in Workout displaycard
+    // const data = await response.json()
+    // // debugger
+    // // .then(data => {
+    //     // render ExerciseSet details in Workout displaycard
 
-        // debugger
-        console.log(data.id)
-        console.log(data.exercise.name)
+    //     // debugger
+    //     console.log(data.id)
+    //     console.log(data.exercise.name)
 
-        // create SetRepetition(s)
-        const setRepData = {
-            block_id: blockId,
-            exercise_set_id: data.id,
-        }
-        // debugger
-        for (let i = 0; i < setReps; i++) {
-            fetch('http://127.0.0.1:3000/set_repetitions', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    "Accept": "application/json"
-                },
-                body: JSON.stringify(setRepData)
-            })
-            renderSet(data, exerciseSetDisplayList)
-        }
-    // })
-    // debugger
+    //     // create SetRepetition(s)
+    //     const setRepData = {
+    //         block_id: blockId,
+    //         exercise_set_id: data.id,
+    //     }
+    //     // debugger
+    //     for (let i = 0; i < setReps; i++) {
+    //         fetch('http://127.0.0.1:3000/set_repetitions', {
+    //             method: 'POST',
+    //             headers: {
+    //                 'Content-Type': 'application/json',
+    //                 "Accept": "application/json"
+    //             },
+    //             body: JSON.stringify(setRepData)
+    //         })
+    //         renderSet(data, exerciseSetDisplayList)
+    //     }
+    // // })
+    // // debugger
 }
 
 // create a WorkoutBlock (association between a Workout and a Block)
@@ -215,6 +205,22 @@ blockExerciseSetForm.addEventListener('submit', function(event) {
         // debugger
         return [selectInput, ...inputFields]
     })
+
+    // =======
+    // create ExerciseSet object for each element in array of inputvalue arrays
+    const exerciseSetObjectsArray = inputValuesArray.map(function(inputValuesArray) {
+        const [ exerciseId, setReps, exerciseRepNum, activeTime, restTime, weight ] = inputValuesArray
+        const exerciseSetObject = {
+            exercise_id: Number(exerciseId),
+            exercise_rep_num: exerciseRepNum,
+            active_time: activeTime,
+            rest_time: restTime,
+            weight: weight,
+        }
+        return exerciseSetObject
+    })
+    // debugger
+    // =======
     
     // selectedWorkoutInput NEEDS to have id as value
     const [ blockNameInput, selectedWorkoutInput ] = event.target
@@ -247,13 +253,16 @@ blockExerciseSetForm.addEventListener('submit', function(event) {
             renderBlock(newBlock, workoutCardInfoContainer)
             const exerciseSetDisplayList = workoutCardInfoContainer.querySelector(`ol[data-id="${newBlock.id}"]`)
 
+            // create all ExerciseSets in provided ExerciseSet objects array
+            createExerciseSet(exerciseSetObjectsArray, newBlock.id, exerciseSetDisplayList)
+
             // debugger
             // console.log(`exerciseSetDisplayList: ${exerciseSetDisplayList}`)
             // create an ExerciseSet for every inputted ExerciseSet html input block
-            inputValuesArray.forEach(function(inputValues) { // IN ORDER HERE
-                console.log(`Loop: ${inputValues}`)
-                createExerciseSet(inputValues, newBlock.id, exerciseSetDisplayList)
-            })
+            // inputValuesArray.forEach(function(inputValues) { // IN ORDER HERE
+            //     console.log(`Loop: ${inputValues}`)
+            //     createExerciseSet(inputValues, newBlock.id, exerciseSetDisplayList)
+            // })
             
         })
         // debugger
