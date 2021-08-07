@@ -298,6 +298,7 @@ blockExerciseSetForm.addEventListener('submit', async function(event) {
     })
 
     const setRepetitionObjectsArray = []
+    
     // create SetRepetition objects
     for (let i = 0; i < setRepArray.length; i++) {
         for (let j = 0; j < setRepArray[i]; j++) {
@@ -310,7 +311,7 @@ blockExerciseSetForm.addEventListener('submit', async function(event) {
             renderSet(newExerciseSets[i], exerciseSetDisplayList)
         }
     }
-
+    // debugger
     createSetRepetitions(setRepetitionObjectsArray)
 
     // debugger
@@ -398,9 +399,9 @@ function renderBlock(block, workoutCard) {
     exerciseSetsDisplay.dataset.id = block.id
 
     const exerciseSetsArray = block.exercise_sets // need to have `has_many :exercise_sets` in Block serializer
-    exerciseSetsArray.sort(function(a, b) { 
-        return a.id - b.id
-      })
+    // exerciseSetsArray.sort(function(a, b) { 
+    //     return a.id - b.id
+    //   })
     // debugger
 
     // for each ExceriseSet in current Block, render its details within Block display of Workout display card
