@@ -212,6 +212,7 @@ blockExerciseSetForm.addEventListener('submit', async function(event) {
     // render Block in the associated Workout display card
     const workoutCardInfoContainer = document.querySelector(`div.card[data-id="${selectedWorkoutId}"] div.workout-info-top`)
     renderBlock(newBlock, workoutCardInfoContainer)
+    // CAN PROB SIMPLIFY THIS (BELOW) BY USING QUERYSELECTORALL?????
     if (workoutViewContainer.style.display !== 'none' && workoutViewContainer.dataset.id == selectedWorkoutId) {
         renderBlock(newBlock, blockSetContainer)
     }
@@ -335,8 +336,14 @@ function renderBlock(block, selectedDiv) {
     blockDiv.className = 'one-block'
     blockDiv.dataset.id = block.id
 
+    const blockNameContainer = document.createElement('div')
+    blockNameContainer.className = 'block-name-container'
+    const blockNameSpan = document.createElement('span')
+    blockNameSpan.className = 'block-name-span'
     const blockName = document.createElement('h3')
     blockName.textContent = block.name
+    blockNameSpan.appendChild(blockName)
+    blockNameContainer.appendChild(blockNameSpan)
 
     // in each block, render container to store ExerciseSets
     const exerciseSetsDisplay = document.createElement('div')
@@ -344,6 +351,18 @@ function renderBlock(block, selectedDiv) {
     exerciseSetsDisplay.dataset.id = block.id
 
     const exerciseSetsArray = block.exercise_sets // need to have `has_many :exercise_sets` in Block serializer
+
+    // render delete Block button in view card
+    if (selectedDiv === blockSetContainer) {
+        const deleteButtonSpan = document.createElement('span')
+        const deleteBlockButton = document.createElement('button')
+        deleteBlockButton.className = 'delete-block-button'
+        deleteBlockButton.style.display = 'none'
+        deleteBlockButton.textContent = 'Delete Block'
+        deleteButtonSpan.appendChild(deleteBlockButton)
+
+        blockNameContainer.appendChild(deleteButtonSpan)
+    }
 
     // for each ExceriseSet in current Block, render its details within Block display of Workout display card
     if (exerciseSetsArray.length !== 0) {
@@ -363,7 +382,7 @@ function renderBlock(block, selectedDiv) {
             // renderSet(newExerciseSets[i], exerciseSetDisplayListViewCard, isFirstRepetition)
         })
     }
-    blockDiv.append(blockName, exerciseSetsDisplay)
+    blockDiv.append(blockNameContainer, exerciseSetsDisplay)
     selectedDiv.append(blockDiv)
 }
 
@@ -409,7 +428,7 @@ fetchWorkouts().then(function(workoutsArray) {
 
 // clicking on "View Workout" button on a Workout display card shows the specific Workout info card below
 workoutDisplay.addEventListener('click', async function(event) {
-    if (event.target.matches('button')) {
+    if (event.target.matches('button')) { // likely need to specify what this button is with class name
         // clear contents
         while (blockSetContainer.firstChild) {
             blockSetContainer.removeChild(blockSetContainer.lastChild);
@@ -437,12 +456,13 @@ workoutDisplay.addEventListener('click', async function(event) {
             blocksArray.forEach(function(block) {
                 renderBlock(block, blockSetContainer)
                 // show Edit button
-                editButton.style.display = ''
+                // editButton.style.display = ''
             })
         } else {
             // hide Edit button
-            editButton.style.display = 'none'
+            // editButton.style.display = 'none'
         }
+        toggleEditingMode("off")
     }
 })
 
@@ -454,8 +474,8 @@ closeDisplayButtom.addEventListener('click', function() {
 
 let editingMode = false
 // event handling in Workout view card
-viewCard.addEventListener('click', function(event) {
-    // editing button
+viewCard.addEventListener('click', async function(event) {
+    // editing mode button
     if (event.target.matches('button#editing-mode-button')) {
         const editModeButton = event.target
         // to turn on editing mode
@@ -468,14 +488,66 @@ viewCard.addEventListener('click', function(event) {
             editModeButton.className = 'editing-mode-off'
             editModeButton.textContent = 'Enter Editing Mode'
         }
+    } else if (event.target.matches('button.delete-block-button')) {
+        const deleteBlockButton = event.target
+        // get the specific Block+Set display div
+        const blockSetDisplayInView = deleteBlockButton.closest('div.one-block')
+        // get selected Block id
+        const selectedBlockId = Number(blockSetDisplayInView.dataset.id)
+        // remove all display of this Block+Set
+        const allDisplays = document.querySelectorAll(`div.one-block[data-id="${selectedBlockId}"]`)
+        allDisplays.forEach(display => display.remove())
+
+        // // remove selected Block+Set display from view card
+        // blockSetDisplayInView.remove()
+        // // remove selected Block+Set display from display card
+        // const blockSetDisplayInDisplay = workoutDisplay.querySelector(`div.one-block[data-id="${selectedBlockId}"]`)
+        // blockSetDisplayInDisplay.remove()
+
+        // delete fetch request
+        const response = await fetch(`http://127.0.0.1:3000/blocks/${selectedBlockId}`, {
+            method: 'DELETE'
+        })
+    } else if (event.target.matches('button.delete-set-button')) {
+        const deleteSetButton = event.target
+        // get selected ExerciseSet id
+        const exerciseSetDisplayDiv = deleteSetButton.closest('div.one-set')
+        const selectedExerciseSetId = Number(exerciseSetDisplayDiv.dataset.id)
+        // remove all displays of this ExerciseSet from view card
+        const allDisplays = document.querySelectorAll(`div.one-set[data-id="${selectedExerciseSetId}"]`)
+        allDisplays.forEach(display => display.remove())
+
+        const response = await fetch(`http://127.0.0.1:3000/exercise_sets/${selectedExerciseSetId}`, {
+            method: 'DELETE'
+        })
+    } else if (event.target.matches('button#delete-workout-button')) {
+        const deleteWorkoutButton = event.target
+        // get the selected Workout id
+        const selectedWorkoutId = deleteWorkoutButton.closest('div.workout-view').dataset.id
+        // hide view
+        workoutViewContainer.style.display = 'none'
+        toggleEditingMode("off")
+        // remove the display card of this Workout
+        const selectedWorkoutDisplayCard = workoutDisplay.querySelector(`div.card[data-id="${selectedWorkoutId}"]`)
+        selectedWorkoutDisplayCard.remove()
+
+        const response = await fetch(`http://127.0.0.1:3000/workouts/${selectedWorkoutId}`, {
+            method: 'DELETE'
+        })
     }
 })
 
 function toggleEditingMode(mode) {
     const allEditingButtonSpans = viewCard.querySelectorAll('span.editing-mode-buttons')
+    const allDeleteBlockButtons = viewCard.querySelectorAll('button.delete-block-button')
+    const deleteWorkoutButton = viewCard.querySelector('button#delete-workout-button')
     if (mode === "on") {
         allEditingButtonSpans.forEach(span => span.style.display = '')
+        allDeleteBlockButtons.forEach(button => button.style.display = '')
+        deleteWorkoutButton.style.display = 'block'
     } else if (mode === "off") {
         allEditingButtonSpans.forEach(span => span.style.display = 'none')
+        allDeleteBlockButtons.forEach(button => button.style.display = 'none')
+        deleteWorkoutButton.style.display = 'none'
     }
 }

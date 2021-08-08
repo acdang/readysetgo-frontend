@@ -80,3 +80,13 @@
 .editing-mode-on {
     background-color: lightcoral;
 }
+
+.block-name-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+#delete-workout-button {
+    display: none;
+}
