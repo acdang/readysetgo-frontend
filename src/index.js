@@ -8,6 +8,8 @@ const blockWorkoutSelectInput = document.querySelector('select.block-exercise-se
 const exerciseSetExerciseSelectInput = document.querySelector('select.set-exercise-select')
 const workoutDisplay = document.querySelector('div.workout-display')
 const workoutViewContainer = document.querySelector('div.workout-view')
+const viewCard = workoutViewContainer.querySelector('div.view-card')
+const blockSetContainer = viewCard.querySelector('div#block-set-container')
 
 async function fetchWorkouts() {
     const resp = await fetch('http://127.0.0.1:3000/workouts')
@@ -208,10 +210,13 @@ blockExerciseSetForm.addEventListener('submit', async function(event) {
     // debugger
 
     // render Block in the associated Workout display card
-    workoutCardInfoContainer = document.querySelector(`div.card[data-id="${selectedWorkoutId}"] div.workout-info-top`)
+    const workoutCardInfoContainer = document.querySelector(`div.card[data-id="${selectedWorkoutId}"] div.workout-info-top`)
     renderBlock(newBlock, workoutCardInfoContainer)
-    const exerciseSetDisplayList = workoutCardInfoContainer.querySelector(`ol[data-id="${newBlock.id}"]`)
-
+    if (workoutViewContainer.style.display !== 'none' && workoutViewContainer.dataset.id == selectedWorkoutId) {
+        renderBlock(newBlock, blockSetContainer)
+    }
+    const exerciseSetDisplayList = workoutCardInfoContainer.querySelector(`div.block-display[data-id="${newBlock.id}"]`)
+    const exerciseSetDisplayListViewCard = workoutViewContainer.querySelector(`div.block-display[data-id="${newBlock.id}"]`)
     // create all ExerciseSets in provided ExerciseSet objects array
     const newExerciseSets = await createExerciseSet(exerciseSetObjectsArray)
 
@@ -234,8 +239,12 @@ blockExerciseSetForm.addEventListener('submit', async function(event) {
             setRepetitionObjectsArray.push(oneObject)
 
             renderSet(newExerciseSets[i], exerciseSetDisplayList)
+            if (workoutViewContainer.style.display !== 'none' && workoutViewContainer.dataset.id == selectedWorkoutId) {
+                renderSet(newExerciseSets[i], exerciseSetDisplayListViewCard)
+            }
         }
     }
+
     // debugger
     createSetRepetitions(setRepetitionObjectsArray)
 
@@ -315,12 +324,13 @@ function renderWorkoutDisplayCard(workoutObject) {
 }
 
 // render Block details in the associated Workout display card
-function renderBlock(block, workoutCard) {
+function renderBlock(block, selectedDiv) {
     const blockName = document.createElement('h3')
     blockName.textContent = block.name
 
     // in each block, render container to store ExerciseSets
-    const exerciseSetsDisplay = document.createElement('ol')
+    const exerciseSetsDisplay = document.createElement('div')
+    exerciseSetsDisplay.className = 'block-display'
     exerciseSetsDisplay.dataset.id = block.id
 
     const exerciseSetsArray = block.exercise_sets // need to have `has_many :exercise_sets` in Block serializer
@@ -330,13 +340,19 @@ function renderBlock(block, workoutCard) {
         // debugger
         renderSet(exerciseSet, exerciseSetsDisplay)
     })
-    workoutCard.append(blockName, exerciseSetsDisplay)
+    selectedDiv.append(blockName, exerciseSetsDisplay)
 }
 
 // render display details of an ExerciseSet
 function renderSet(exerciseSet, exerciseSetsDisplay) {
-    const oneSetDisplay = document.createElement('li')
-    oneSetDisplay.textContent = `${exerciseSet.exercise.name}, ${exerciseSet.exercise_rep_num} repetition(s)`
+    const oneSetDisplay = document.createElement('div')
+    oneSetDisplay.className = 'one-set'
+
+    const infoSpan = document.createElement('span')
+    infoSpan.className = 'set-info'
+
+    infoSpan.textContent = `${exerciseSet.exercise.name}, ${exerciseSet.exercise_rep_num} repetition(s)`
+    oneSetDisplay.appendChild(infoSpan)
     exerciseSetsDisplay.appendChild(oneSetDisplay)
 }
 
@@ -351,18 +367,32 @@ fetchWorkouts().then(function(workoutsArray) {
 // clicking on "View Workout" button on a Workout display card shows the specific Workout info card below
 workoutDisplay.addEventListener('click', async function(event) {
     if (event.target.matches('button')) {
+        // clear contents
+        while (blockSetContainer.firstChild) {
+            blockSetContainer.removeChild(blockSetContainer.lastChild);
+        }
+
         // display the specific Workout view card
         workoutViewContainer.style.display = 'block'
 
         // get specific Workout card
         const selectedCard = event.target.closest('div').parentElement
-
+        workoutViewContainer.dataset.id = selectedCard.dataset.id
         // get Workout object
         const workoutObject = await fetchWorkoutById(selectedCard.dataset.id)
         // display Workout name
-        const viewWorkoutName = workoutViewContainer.querySelector('div.view-card h2#specific-workout-name')
+        const viewWorkoutName = viewCard.querySelector('h2#specific-workout-name')
         viewWorkoutName.textContent = workoutObject.name
         
+        // display Blocks and ExerciseSets on left side
+        const blocksArray = workoutObject.blocks // need to have `has_many :blocks` in Workout serializer
+        // debugger
+        // render each Block in current Workout
+        if (blocksArray) {
+            blocksArray.forEach(function(block) {
+                renderBlock(block, blockSetContainer)
+            })
+        }
     }
 })
 

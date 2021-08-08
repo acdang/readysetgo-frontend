@@ -35,16 +35,16 @@
 }
 
 .column {
-    height: 10rem;
+    /* height: 10rem; */
+    padding:1em;
 }
 
 #workout-info-side {
-    background-color: olive;
+    background-color: powderblue;
     width: 40%;
 }
 
 #exercise-info-side {
-    background-color: powderblue;
     width: 60%;
 }
 
@@ -59,4 +59,10 @@
 
 .exercise-display {
     display: none;
+}
+
+.one-set {
+    margin: 0.5em;
+    padding: 0.5em;
+    background-color:#FFD580;
 }
