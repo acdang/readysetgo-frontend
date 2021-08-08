@@ -55,14 +55,28 @@
 
 .edit-set-form {
     display: none;
+    height: 100%;
+    background-color: rosybrown;
 }
 
 .exercise-display {
     display: none;
+    height: 100%;
+    background-color: seagreen;
 }
 
 .one-set {
     margin: 0.5em;
     padding: 0.5em;
     background-color:#FFD580;
+    display: flex;
+    justify-content: space-between;
+}
+
+.editing-mode-off {
+    background-color: lightgreen;
+}
+
+.editing-mode-on {
+    background-color: lightcoral;
 }

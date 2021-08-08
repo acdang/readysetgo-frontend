@@ -215,8 +215,8 @@ blockExerciseSetForm.addEventListener('submit', async function(event) {
     if (workoutViewContainer.style.display !== 'none' && workoutViewContainer.dataset.id == selectedWorkoutId) {
         renderBlock(newBlock, blockSetContainer)
     }
-    const exerciseSetDisplayList = workoutCardInfoContainer.querySelector(`div.block-display[data-id="${newBlock.id}"]`)
-    const exerciseSetDisplayListViewCard = workoutViewContainer.querySelector(`div.block-display[data-id="${newBlock.id}"]`)
+    const exerciseSetDisplayList = workoutCardInfoContainer.querySelector(`div.exercise-set-display[data-id="${newBlock.id}"]`)
+    const exerciseSetDisplayListViewCard = workoutViewContainer.querySelector(`div.exercise-set-display[data-id="${newBlock.id}"]`)
     // create all ExerciseSets in provided ExerciseSet objects array
     const newExerciseSets = await createExerciseSet(exerciseSetObjectsArray)
 
@@ -240,7 +240,13 @@ blockExerciseSetForm.addEventListener('submit', async function(event) {
 
             renderSet(newExerciseSets[i], exerciseSetDisplayList)
             if (workoutViewContainer.style.display !== 'none' && workoutViewContainer.dataset.id == selectedWorkoutId) {
-                renderSet(newExerciseSets[i], exerciseSetDisplayListViewCard)
+                // add Edit and Delete buttons
+                let isFirstRepetition = false
+                if (j === 0) { // buttons to only first displayblock of repeating sets
+                    isFirstRepetition = true
+                }
+
+                renderSet(newExerciseSets[i], exerciseSetDisplayListViewCard, isFirstRepetition)
             }
         }
     }
@@ -325,34 +331,71 @@ function renderWorkoutDisplayCard(workoutObject) {
 
 // render Block details in the associated Workout display card
 function renderBlock(block, selectedDiv) {
+    const blockDiv = document.createElement('div')
+    blockDiv.className = 'one-block'
+    blockDiv.dataset.id = block.id
+
     const blockName = document.createElement('h3')
     blockName.textContent = block.name
 
     // in each block, render container to store ExerciseSets
     const exerciseSetsDisplay = document.createElement('div')
-    exerciseSetsDisplay.className = 'block-display'
+    exerciseSetsDisplay.className = 'exercise-set-display'
     exerciseSetsDisplay.dataset.id = block.id
 
     const exerciseSetsArray = block.exercise_sets // need to have `has_many :exercise_sets` in Block serializer
 
     // for each ExceriseSet in current Block, render its details within Block display of Workout display card
-    exerciseSetsArray.forEach(function(exerciseSet) { // need to have `has_one :exercise` in ExerciseSet serializer
-        // debugger
-        renderSet(exerciseSet, exerciseSetsDisplay)
-    })
-    selectedDiv.append(blockName, exerciseSetsDisplay)
+    if (exerciseSetsArray.length !== 0) {
+        exerciseSetsArray.forEach(function(exerciseSet, index, array) { // need to have `has_one :exercise` in ExerciseSet serializer
+            // debugger
+            // renderSet(exerciseSet, exerciseSetsDisplay)
+
+            let isFirstRepetition = false
+            if (selectedDiv === blockSetContainer) {
+                if (index !== (exerciseSetsArray.length - 1)) {
+                    if (index === 0 || exerciseSet.id !== array[index - 1].id) { // buttons to only first displayblock of repeating sets
+                        isFirstRepetition = true
+                    }
+                }
+            }
+            renderSet(exerciseSet, exerciseSetsDisplay, isFirstRepetition)
+            // renderSet(newExerciseSets[i], exerciseSetDisplayListViewCard, isFirstRepetition)
+        })
+    }
+    blockDiv.append(blockName, exerciseSetsDisplay)
+    selectedDiv.append(blockDiv)
 }
 
 // render display details of an ExerciseSet
-function renderSet(exerciseSet, exerciseSetsDisplay) {
+function renderSet(exerciseSet, exerciseSetsDisplay, isFirstDisplay) {
     const oneSetDisplay = document.createElement('div')
     oneSetDisplay.className = 'one-set'
+    oneSetDisplay.dataset.id = exerciseSet.id
 
     const infoSpan = document.createElement('span')
     infoSpan.className = 'set-info'
 
     infoSpan.textContent = `${exerciseSet.exercise.name}, ${exerciseSet.exercise_rep_num} repetition(s)`
     oneSetDisplay.appendChild(infoSpan)
+
+    if (arguments[2] && isFirstDisplay === true) {
+        const buttonSpan = document.createElement('span')
+        buttonSpan.className = 'editing-mode-buttons'
+        buttonSpan.style.display = 'none'
+
+        const editButton = document.createElement('button')
+        editButton.textContent = 'Edit'
+        editButton.className = 'edit-set-button'
+
+        const deleteButton = document.createElement('button')
+        deleteButton.textContent = 'Delete'
+        deleteButton.className = 'delete-set-button'
+
+        buttonSpan.append(editButton, deleteButton)
+        oneSetDisplay.appendChild(buttonSpan)
+    }
+
     exerciseSetsDisplay.appendChild(oneSetDisplay)
 }
 
@@ -384,14 +427,21 @@ workoutDisplay.addEventListener('click', async function(event) {
         const viewWorkoutName = viewCard.querySelector('h2#specific-workout-name')
         viewWorkoutName.textContent = workoutObject.name
         
+        const editButton = viewCard.querySelector('button#editing-mode-button')
+        editButton.className = 'editing-mode-off'
         // display Blocks and ExerciseSets on left side
         const blocksArray = workoutObject.blocks // need to have `has_many :blocks` in Workout serializer
         // debugger
         // render each Block in current Workout
-        if (blocksArray) {
+        if (blocksArray.length !== 0) {
             blocksArray.forEach(function(block) {
                 renderBlock(block, blockSetContainer)
+                // show Edit button
+                editButton.style.display = ''
             })
+        } else {
+            // hide Edit button
+            editButton.style.display = 'none'
         }
     }
 })
@@ -401,3 +451,31 @@ const closeDisplayButtom = workoutViewContainer.querySelector('button#close-disp
 closeDisplayButtom.addEventListener('click', function() {
     workoutViewContainer.style.display = 'none'
 })
+
+let editingMode = false
+// event handling in Workout view card
+viewCard.addEventListener('click', function(event) {
+    // editing button
+    if (event.target.matches('button#editing-mode-button')) {
+        const editModeButton = event.target
+        // to turn on editing mode
+        if (editModeButton.className === 'editing-mode-off') {
+            toggleEditingMode("on")
+            editModeButton.className = 'editing-mode-on'
+            editModeButton.textContent = 'Exit Editing Mode'
+        } else if (editModeButton.className === 'editing-mode-on') {
+            toggleEditingMode("off")
+            editModeButton.className = 'editing-mode-off'
+            editModeButton.textContent = 'Enter Editing Mode'
+        }
+    }
+})
+
+function toggleEditingMode(mode) {
+    const allEditingButtonSpans = viewCard.querySelectorAll('span.editing-mode-buttons')
+    if (mode === "on") {
+        allEditingButtonSpans.forEach(span => span.style.display = '')
+    } else if (mode === "off") {
+        allEditingButtonSpans.forEach(span => span.style.display = 'none')
+    }
+}
