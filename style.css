@@ -56,13 +56,16 @@
 .edit-set-form {
     display: none;
     height: 100%;
-    background-color: rosybrown;
+    width: 70%;
+    margin: auto;
+    /* width: 100%; */
+    /* background-color: rosybrown; */
 }
 
 .exercise-display {
     display: none;
     height: 100%;
-    background-color: seagreen;
+    /* background-color: seagreen; */
 }
 
 .one-set {
@@ -89,4 +92,5 @@
 
 #delete-workout-button {
     display: none;
+    margin-top: 1em;
 }

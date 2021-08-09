@@ -5,7 +5,7 @@ const addExerciseSetButton = document.querySelector('button#add-set')
 const exerciseSetFormBlock = document.querySelector('div.set-form-block')
 const exerciseSetFormContainer = document.querySelector('div.set-form-container')
 const blockWorkoutSelectInput = document.querySelector('select.block-exercise-select')
-const exerciseSetExerciseSelectInput = document.querySelector('select.set-exercise-select')
+const exerciseSetExerciseSelectInput = document.querySelector('div.set-form-container select.set-exercise-select')
 const workoutDisplay = document.querySelector('div.workout-display')
 const workoutViewContainer = document.querySelector('div.workout-view')
 const viewCard = workoutViewContainer.querySelector('div.view-card')
@@ -20,12 +20,17 @@ async function fetchWorkoutById(id) {
     // const workoutsArray = await fetchWorkouts()
     // return workoutsArray.find(workoutObj => workoutObj.id == id)
 
-    const workoutObject = await fetch(`http://127.0.0.1:3000/workouts/${id}`)
-    return workoutObject.json()
+    const resp = await fetch(`http://127.0.0.1:3000/workouts/${id}`)
+    return resp.json()
 }
 
 async function fetchExercises() {
     const resp = await fetch('http://127.0.0.1:3000/exercises')
+    return resp.json()
+}
+
+async function fetchExerciseSetById(id) {
+    const resp = await fetch(`http://127.0.0.1:3000/exercise_sets/${id}`)
     return resp.json()
 }
 
@@ -257,7 +262,7 @@ blockExerciseSetForm.addEventListener('submit', async function(event) {
 
     // debugger
     createSetRepetitions(setRepetitionObjectsArray)
-
+    // toggleEditingMode("off")
     // debugger
     event.target.reset() // form reset
 })
@@ -375,11 +380,13 @@ function renderBlock(block, selectedDiv) {
 
             let isFirstRepetition = false
             if (selectedDiv === blockSetContainer) {
-                if (index !== (exerciseSetsArray.length - 1)) {
-                    if (index === 0 || exerciseSet.id !== array[index - 1].id) { // buttons to only first displayblock of repeating sets
+                // if (index !== (exerciseSetsArray.length - 1)) {
+                    // console.log(index)
+                    if (index === 0 || exerciseSet.id !== exerciseSetsArray[index - 1].id) { // buttons to only first displayblock of repeating sets
+                        // console.log(exerciseSet.id)
                         isFirstRepetition = true
-                    }
-                }
+                    }             
+                // }
             }
             renderSet(exerciseSet, exerciseSetsDisplay, isFirstRepetition)
             // renderSet(newExerciseSets[i], exerciseSetDisplayListViewCard, isFirstRepetition)
@@ -537,6 +544,18 @@ viewCard.addEventListener('click', async function(event) {
         const response = await fetch(`http://127.0.0.1:3000/workouts/${selectedWorkoutId}`, {
             method: 'DELETE'
         })
+    } else if (event.target.matches('button.edit-set-button')) {
+        const editSetButton = event.target
+        // get the selected ExerciseSet id
+        const selectedExerciseSetId = editSetButton.closest('div.one-set').dataset.id
+        // get the selected Set
+        const selectedSet = await fetchExerciseSetById(selectedExerciseSetId)
+        // show update form
+        const updateForm = viewCard.querySelector('div.edit-set-form')
+        updateForm.style.display = 'block'
+        // console.log(updateForm)
+        // pre-fill fields with current values
+        
     }
 })
 
