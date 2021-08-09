@@ -17,8 +17,11 @@ async function fetchWorkouts() {
 }
 
 async function fetchWorkoutById(id) {
-    const workoutsArray = await fetchWorkouts()
-    return workoutsArray.find(workoutObj => workoutObj.id == id)
+    // const workoutsArray = await fetchWorkouts()
+    // return workoutsArray.find(workoutObj => workoutObj.id == id)
+
+    const workoutObject = await fetch(`http://127.0.0.1:3000/workouts/${id}`)
+    return workoutObject.json()
 }
 
 async function fetchExercises() {
