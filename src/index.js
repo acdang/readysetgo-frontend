@@ -30,6 +30,11 @@ async function fetchExercises() {
     return resp.json()
 }
 
+async function fetchExerciseById(id) {
+    const resp = await fetch(`http://127.0.0.1:3000/exercises/${id}`)
+    return resp.json()
+}
+
 async function fetchExerciseSetById(id) {
     const resp = await fetch(`http://127.0.0.1:3000/exercise_sets/${id}`)
     return resp.json()
@@ -588,7 +593,7 @@ viewCard.addEventListener('click', async function(event) {
         restTime.placeholder = selectedSet.rest_time ? selectedSet.rest_time : ""
         weight.placeholder = selectedSet.weight ? selectedSet.weight : ""
 
-        updateForm.addEventListener('submit', function(event) {
+        updateForm.addEventListener('submit', async function(event) {
             event.preventDefault()
 
             const form = event.target
@@ -705,16 +710,49 @@ viewCard.addEventListener('click', async function(event) {
                         })
                     })
                 }
-
-                // update text if new
+            }
+            // update text if new
+            if (updatedDataHash.exercise_id || updatedDataHash.exercise_rep_num) {
+                const allInDisplayCards = workoutDisplay.querySelectorAll(`div.one-set[data-id="${selectedExerciseSetId}"]`)
+                const allInViewCard = viewCard.querySelectorAll(`div.one-set[data-id="${selectedExerciseSetId}"] span.set-info`)
+                const exerciseObj = await fetchExerciseById(updatedDataHash.exercise_id)
                 if (updatedDataHash.exercise_id && updatedDataHash.exercise_rep_num) {
-                    
+                    allInDisplayCards.forEach(element => element.textContent = exerciseSetDetailsLine(exerciseObj.name, updatedDataHash.exercise_rep_num))
+                    allInViewCard.forEach(element => element.textContent = exerciseSetDetailsLine(exerciseObj.name, updatedDataHash.exercise_rep_num))
+                } else if (updatedDataHash.exercise_id) {
+                    allInDisplayCards.forEach(element => element.textContent = exerciseSetDetailsLine(exerciseObj.name, selectedSet.exercise_rep_num))
+                    allInViewCard.forEach(element => element.textContent = exerciseSetDetailsLine(exerciseObj.name, selectedSet.exercise_rep_num))
+                } else if (updatedDataHash.exercise_rep_num) {
+                    allInDisplayCards.forEach(element => element.textContent = exerciseSetDetailsLine(selectedSet.exercise.name, updatedDataHash.exercise_rep_num))
+                    allInViewCard.forEach(element => element.textContent = exerciseSetDetailsLine(selectedSet.exercise.name, updatedDataHash.exercise_rep_num))
                 }
             }
 
-            // console.log(updatedDataHash)
-            // just change text content + number of applicable ExerciseSet displays
-            form.reset()
+            // update
+            if (Object.keys(updatedDataHash).length !== 0) {
+                const response = await fetch(`http://127.0.0.1:3000/exercise_sets/${selectedExerciseSetId}`, {
+                    method: 'PATCH',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        "Accept": "application/json"
+                    },
+                    body: JSON.stringify({ exercise_set: updatedDataHash })
+                })
+                const updatedExerciseSet = await response.json()
+                // console.log(updatedDataHash)
+                // just change text content + number of applicable ExerciseSet displays
+                form.reset()
+                exerciseSelect.value = updatedExerciseSet.exercise.id
+                
+                const currentBlockObj = await fetchBlockById(currentBlockId)
+                const newSetReps = currentBlockObj.exercise_sets.filter(set => set.id === selectedExerciseSetId).length
+                setReps.placeholder = newSetReps
+
+                exerciseReps.placeholder = updatedExerciseSet.exercise_rep_num ? updatedExerciseSet.exercise_rep_num : ""
+                activeTime.placeholder = updatedExerciseSet.active_time ? updatedExerciseSet.active_time : ""
+                restTime.placeholder = updatedExerciseSet.rest_time ? updatedExerciseSet.rest_time : ""
+                weight.placeholder = updatedExerciseSet.weight ? updatedExerciseSet.weight : ""
+            }
         })
     }
 })
