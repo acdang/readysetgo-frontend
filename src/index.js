@@ -6,6 +6,7 @@ const exerciseSetFormBlock = document.querySelector('div.set-form-block')
 const exerciseSetFormContainer = document.querySelector('div.set-form-container')
 const blockWorkoutSelectInput = document.querySelector('select.block-exercise-select')
 const exerciseSetExerciseSelectInput = document.querySelector('div.set-form-container select.set-exercise-select')
+const updateExerciseSelectInput = document.querySelector('form.update-set-form-block select')
 const workoutDisplay = document.querySelector('div.workout-display')
 const workoutViewContainer = document.querySelector('div.workout-view')
 const viewCard = workoutViewContainer.querySelector('div.view-card')
@@ -34,6 +35,11 @@ async function fetchExerciseSetById(id) {
     return resp.json()
 }
 
+async function fetchBlockById(id) {
+    const resp = await fetch(`http://127.0.0.1:3000/blocks/${id}`)
+    return resp.json()
+}
+
 // on load render placeholder/default for Workout name input field
 fetchWorkouts().then(function(workoutsArray) {
     workoutNameInput.placeholder = `Workout ${workoutsArray.length + 1}`
@@ -42,6 +48,12 @@ fetchWorkouts().then(function(workoutsArray) {
 // on form submit, assigns default placeholder as name value for new Workout (if no user-provided name)
 function autoWorkoutNameValue(input) {
     input.value = input.placeholder
+}
+
+function exerciseSetDetailsLine(exerciseName, exerciseRepetitions) {
+    const singleOrPlural = exerciseRepetitions > 1 ? "repetitions" : "repetition"
+
+    return `${exerciseName}, ${exerciseRepetitions} ${singleOrPlural}`
 }
 
 // submit handling on create new Workout form
@@ -297,6 +309,9 @@ function createExerciseOption(exerciseObject) {
     newOption.textContent = exerciseObject.name
     // append to select input
     exerciseSetExerciseSelectInput.appendChild(newOption)
+    const forUpdateForm = newOption.cloneNode(true)
+    updateExerciseSelectInput.appendChild(forUpdateForm)
+    // debugger
 }
 
 // render a Workout display card for a given Workout
@@ -405,7 +420,7 @@ function renderSet(exerciseSet, exerciseSetsDisplay, isFirstDisplay) {
     const infoSpan = document.createElement('span')
     infoSpan.className = 'set-info'
 
-    infoSpan.textContent = `${exerciseSet.exercise.name}, ${exerciseSet.exercise_rep_num} repetition(s)`
+    infoSpan.textContent = exerciseSetDetailsLine(exerciseSet.exercise.name, exerciseSet.exercise_rep_num)
     oneSetDisplay.appendChild(infoSpan)
 
     if (arguments[2] && isFirstDisplay === true) {
@@ -547,15 +562,96 @@ viewCard.addEventListener('click', async function(event) {
     } else if (event.target.matches('button.edit-set-button')) {
         const editSetButton = event.target
         // get the selected ExerciseSet id
-        const selectedExerciseSetId = editSetButton.closest('div.one-set').dataset.id
+        const selectedExerciseSetId = Number(editSetButton.closest('div.one-set').dataset.id)
         // get the selected Set
         const selectedSet = await fetchExerciseSetById(selectedExerciseSetId)
         // show update form
         const updateForm = viewCard.querySelector('div.edit-set-form')
         updateForm.style.display = 'block'
+        updateForm.dataset.id = selectedExerciseSetId
         // console.log(updateForm)
+
         // pre-fill fields with current values
-        
+        const exerciseSelect = updateForm.querySelector('select')
+        const inputFieldElementsArray = updateForm.querySelectorAll('input')
+        const [ setReps, exerciseReps, activeTime, restTime, weight ] = inputFieldElementsArray
+
+        const currentBlockId = Number(editSetButton.closest('div.one-block').dataset.id)
+        const currentBlockObj = await fetchBlockById(currentBlockId)
+        const origSetReps = currentBlockObj.exercise_sets.filter(set => set.id === selectedExerciseSetId).length
+        // debugger
+        exerciseSelect.value = selectedSet.exercise.id
+        setReps.placeholder = origSetReps
+        exerciseReps.placeholder = selectedSet.exercise_rep_num ? selectedSet.exercise_rep_num : ""
+        activeTime.placeholder = selectedSet.active_time ? selectedSet.active_time : ""
+        restTime.placeholder = selectedSet.rest_time ? selectedSet.rest_time : ""
+        weight.placeholder = selectedSet.weight ? selectedSet.weight : ""
+
+        updateForm.addEventListener('submit', function(event) {
+            event.preventDefault()
+
+            const form = event.target
+            // get new inputs
+            const updatedExerciseSelect = form.querySelector('select')
+            const updatedFieldElementsArray = form.querySelectorAll('input')
+            const allElements = [updatedExerciseSelect, ...updatedFieldElementsArray]
+            const [ exerciseId, setReps, exerciseReps, activeTime, restTime, weight ] = allElements
+
+            // updated attributes hash
+            const updatedDataHash = { }
+            allElements.forEach((inputHtml, index) => {
+                if (inputHtml.value !== "") {
+                    // console.log(allElements[0][0])
+                    const inputValue = Number(inputHtml.value)
+                    switch (index) {
+                        case 0:
+                            if (updatedExerciseSelect.value != selectedSet.exercise.id) {
+                                updatedDataHash.exercise_id = inputValue
+                            }
+                            break
+                        case 2:
+                            updatedDataHash.exercise_rep_num = inputValue
+                            break
+                        case 3:
+                            updatedDataHash.active_time = inputValue
+                            break
+                        case 4:
+                            updatedDataHash.rest_time = inputValue
+                            break
+                        case 5:
+                            updatedDataHash.weight = inputValue
+                            break
+                    }
+                }
+            })
+            // if new ExerciseSet rep input
+            if (setReps.value !== "") {
+                const updatedSetRepetitions = Number(setReps.value)
+                // console.log(updatedSetRepetitions)
+                // debugger
+                // remove excess displays
+                if (updatedSetRepetitions < origSetReps) {
+                    // from view card
+                    let viewCardSets = viewCard.querySelectorAll(`div.one-set[data-id="${selectedExerciseSetId}"]`)
+                    while (viewCardSets.length != updatedSetRepetitions) {
+                        const lastIndex = viewCardSets.length - 1
+                        viewCardSets[lastIndex].remove()
+                        viewCardSets = viewCard.querySelectorAll(`div.one-set[data-id="${selectedExerciseSetId}"]`)
+                    }
+                    // from display card
+                    let displayCardSets = workoutDisplay.querySelectorAll(`div.one-set[data-id="${selectedExerciseSetId}"]`)
+                    while (displayCardSets.length != updatedSetRepetitions) {
+                        const lastIndex = displayCardSets.length - 1
+                        displayCardSets[lastIndex].remove()
+                        displayCardSets = viewCard.querySelectorAll(`div.one-set[data-id="${selectedExerciseSetId}"]`)
+                    }
+                }
+            }
+
+            // console.log(updatedDataHash)
+            // just change text content + number of applicable ExerciseSet displays
+
+        })
     }
 })
 
