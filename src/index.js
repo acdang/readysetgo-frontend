@@ -643,8 +643,25 @@ viewCard.addEventListener('click', async function(event) {
                     while (displayCardSets.length != updatedSetRepetitions) {
                         const lastIndex = displayCardSets.length - 1
                         displayCardSets[lastIndex].remove()
-                        displayCardSets = viewCard.querySelectorAll(`div.one-set[data-id="${selectedExerciseSetId}"]`)
+                        displayCardSets = workoutDisplay.querySelectorAll(`div.one-set[data-id="${selectedExerciseSetId}"]`)
                     }
+                    // delete SetRepetitions
+                    const numOfRepsToDelete = origSetReps - updatedSetRepetitions
+                    // num_to_delete
+                    fetch('http://127.0.0.1:3000/set_repetitions/reduce', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            "Accept": "application/json"
+                        },
+                        body: JSON.stringify({
+                            set_repetition: {
+                                num_to_delete: numOfRepsToDelete,
+                                block_id: currentBlockObj.id,
+                                exercise_set_id: selectedExerciseSetId,
+                            }
+                        })
+                    })
                 }
             }
 
