@@ -500,6 +500,7 @@ closeDisplayButtom.addEventListener('click', function() {
 let editingMode = false
 // event handling in Workout view card
 viewCard.addEventListener('click', async function(event) {
+    event.stopPropagation()
     // editing mode button
     if (event.target.matches('button#editing-mode-button')) {
         const editModeButton = event.target
@@ -569,7 +570,7 @@ viewCard.addEventListener('click', async function(event) {
         const updateForm = viewCard.querySelector('div.edit-set-form')
         updateForm.style.display = 'block'
         updateForm.dataset.id = selectedExerciseSetId
-        // console.log(updateForm)
+        console.log(selectedExerciseSetId)
 
         // pre-fill fields with current values
         const exerciseSelect = updateForm.querySelector('select')
@@ -656,18 +657,64 @@ viewCard.addEventListener('click', async function(event) {
                         },
                         body: JSON.stringify({
                             set_repetition: {
-                                num_to_delete: numOfRepsToDelete,
+                                num_change: numOfRepsToDelete,
                                 block_id: currentBlockObj.id,
                                 exercise_set_id: selectedExerciseSetId,
                             }
                         })
                     })
                 }
+                // create new displays
+                if (updatedSetRepetitions > origSetReps) {
+                    // to view card
+                    let viewCardSets = viewCard.querySelectorAll(`div.one-set[data-id="${selectedExerciseSetId}"]`)
+                    while (viewCardSets.length !== updatedSetRepetitions) {
+                        const lastIndex = viewCardSets.length - 1
+                        const newSetDisplay = viewCardSets[lastIndex].cloneNode(true)
+                        if (viewCardSets.length === 1) {
+                            const buttons = newSetDisplay.querySelector('span.editing-mode-buttons')
+                            buttons.remove()
+                        }
+                        viewCardSets[lastIndex].parentElement.appendChild(newSetDisplay)
+                        viewCardSets = viewCard.querySelectorAll(`div.one-set[data-id="${selectedExerciseSetId}"]`)
+                        // console.log('wha')
+                    }
+                    // to display card
+                    let displayCardSets = workoutDisplay.querySelectorAll(`div.one-set[data-id="${selectedExerciseSetId}"]`)
+                    while (displayCardSets.length != updatedSetRepetitions) {
+                        const lastIndex = displayCardSets.length - 1
+                        const newSetDisplay = displayCardSets[lastIndex].cloneNode(true)
+                        displayCardSets[lastIndex].parentElement.appendChild(newSetDisplay)
+                        displayCardSets = workoutDisplay.querySelectorAll(`div.one-set[data-id="${selectedExerciseSetId}"]`)
+                    }
+
+                    const numOfRepsToAdd = updatedSetRepetitions - origSetReps
+                    // create new SetRepetitions
+                    fetch('http://127.0.0.1:3000/set_repetitions/increase', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            "Accept": "application/json"
+                        },
+                        body: JSON.stringify({
+                            set_repetition: {
+                                num_change: numOfRepsToAdd,
+                                block_id: currentBlockObj.id,
+                                exercise_set_id: selectedExerciseSetId,
+                            }
+                        })
+                    })
+                }
+
+                // update text if new
+                if (updatedDataHash.exercise_id && updatedDataHash.exercise_rep_num) {
+                    
+                }
             }
 
             // console.log(updatedDataHash)
             // just change text content + number of applicable ExerciseSet displays
-
+            form.reset()
         })
     }
 })
