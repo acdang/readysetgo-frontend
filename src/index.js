@@ -15,6 +15,7 @@ const blockSetContainer = viewCard.querySelector('div#block-set-container')
 const selectExistingBlockForm = document.querySelector('form.add-existing-block-form')
 const workoutSelectExistingBlock = document.querySelector('form.add-existing-block-form select.select-workout')
 const divToSelectWorkoutToAddTo = selectExistingBlockForm.querySelector('div.select-workout-to-add-to')
+const updateForm = viewCard.querySelector('div.edit-set-form')
 
 async function fetchWorkouts() {
     const resp = await fetch('http://127.0.0.1:3000/workouts')
@@ -170,11 +171,14 @@ fetchWorkouts().then(function(workoutsArray) {
 // add new ExerciseSet input field blocks in the Block/ExerciseSet form
 addExerciseSetButton.addEventListener('click', function() {
     const newSetFormBlock = exerciseSetFormBlock.cloneNode(true)
+
+    // reset fields
+    const allInputs = newSetFormBlock.querySelectorAll('input')
+    allInputs.forEach(inputField => inputField.value = '')
     
     const lineBreak = document.createElement('hr')
-
-    exerciseSetFormContainer.appendChild(lineBreak)
-    exerciseSetFormContainer.appendChild(newSetFormBlock)
+    
+    exerciseSetFormContainer.append(lineBreak, newSetFormBlock)
 })
 
 // add option tag to select Workout input in Block/ExerciseSet form
@@ -614,9 +618,26 @@ viewCard.addEventListener('click', async function(event) {
         const blockSetDisplayInView = deleteBlockButton.closest('div.one-block')
         // get selected Block id
         const selectedBlockId = Number(blockSetDisplayInView.dataset.id)
-        // remove all display of this Block+Set
-        const allDisplays = document.querySelectorAll(`div.one-block[data-id="${selectedBlockId}"]`)
-        allDisplays.forEach(display => display.remove())
+
+        // get id of Workout this Block belongs to
+        const workoutId = blockSetDisplayInView.closest('div.workout-view').dataset.id
+
+        // get position of this Block
+        const allBlocksInView = Array.from(viewCard.querySelectorAll('div.one-block'))
+        const indexOfSelectedBlock = allBlocksInView.indexOf(blockSetDisplayInView)
+
+        // remove all display of this Block from view
+        blockSetDisplayInView.remove()
+        // remove all display of this Block from its Workout display card
+        const workoutCard = workoutDisplay.querySelector(`div.card[data-id="${workoutId}"]`)
+        const allBlocksInWorkoutDisplay = workoutCard.querySelectorAll(`div.one-block`)
+        allBlocksInWorkoutDisplay[indexOfSelectedBlock].remove()
+
+        // const allDisplays = document.querySelectorAll(`div.one-block[data-id="${selectedBlockId}"]`)
+        // allDisplays.forEach(display => display.remove())
+
+        // hide update form if open
+        if (updateForm.display !== 'none') { updateForm.display = 'none' }
 
         // // remove selected Block+Set display from view card
         // blockSetDisplayInView.remove()
@@ -625,10 +646,12 @@ viewCard.addEventListener('click', async function(event) {
         // blockSetDisplayInDisplay.remove()
 
         // delete fetch request
-        const response = await fetch(`http://127.0.0.1:3000/blocks/${selectedBlockId}`, {
-            method: 'DELETE'
-        })
+        // const response = await fetch(`http://127.0.0.1:3000/blocks/${selectedBlockId}`, {
+        //     method: 'DELETE'
+        // })
     } else if (event.target.matches('button.delete-set-button')) {
+        // WARNING: deleting a Set will affect all duplicated Blocks of the Block this Set belongs to
+
         const deleteSetButton = event.target
         // get selected ExerciseSet id
         const exerciseSetDisplayDiv = deleteSetButton.closest('div.one-set')
@@ -658,13 +681,18 @@ viewCard.addEventListener('click', async function(event) {
         handleEditButtons(true)
         const editSetButton = event.target
 
-        // highlight selected div
         const selectedDiv = editSetButton.closest('div.one-set')
-        selectedDiv.classList.add('currently-editing')
         // get the selected ExerciseSet id
         const selectedExerciseSetId = Number(selectedDiv.dataset.id)
         // get the selected Set
         const selectedSet = await fetchExerciseSetById(selectedExerciseSetId)
+
+        // highlight selected divs
+        // to account for more than one instance of the same Block in a Workout
+        const allSameDivs = viewCard.querySelectorAll(`div.one-set[data-id="${selectedExerciseSetId}"]`)
+        allSameDivs.forEach(div => div.classList.add('currently-editing'))
+        // selectedDiv.classList.add('currently-editing')
+
         // show update form
         const updateForm = viewCard.querySelector('div.edit-set-form')
         updateForm.style.display = 'block'
@@ -729,22 +757,30 @@ viewCard.addEventListener('click', async function(event) {
                 const updatedSetRepetitions = Number(setReps.value)
                 // console.log(updatedSetRepetitions)
                 // debugger
+
+                // account for more than one instance of the same Block in a Workout
+                const allSameBlocksInView = viewCard.querySelectorAll(`div.one-block[data-id="${currentBlockId}"]`)
+                const allSameBlocksInDisplay = workoutDisplay.querySelectorAll(`div.one-block[data-id="${currentBlockId}"]`)
                 // remove excess displays
                 if (updatedSetRepetitions < origSetReps) {
                     // from view card
-                    let viewCardSets = viewCard.querySelectorAll(`div.one-set[data-id="${selectedExerciseSetId}"]`)
-                    while (viewCardSets.length != updatedSetRepetitions) {
-                        const lastIndex = viewCardSets.length - 1
-                        viewCardSets[lastIndex].remove()
-                        viewCardSets = viewCard.querySelectorAll(`div.one-set[data-id="${selectedExerciseSetId}"]`)
-                    }
+                    allSameBlocksInView.forEach(block => {
+                        let viewCardSets = block.querySelectorAll(`div.one-set`)
+                        while (viewCardSets.length != updatedSetRepetitions) {
+                            const lastIndex = viewCardSets.length - 1
+                            viewCardSets[lastIndex].remove()
+                            viewCardSets = block.querySelectorAll(`div.one-set`)
+                        }
+                    })
                     // from display card
-                    let displayCardSets = workoutDisplay.querySelectorAll(`div.one-set[data-id="${selectedExerciseSetId}"]`)
-                    while (displayCardSets.length != updatedSetRepetitions) {
-                        const lastIndex = displayCardSets.length - 1
-                        displayCardSets[lastIndex].remove()
-                        displayCardSets = workoutDisplay.querySelectorAll(`div.one-set[data-id="${selectedExerciseSetId}"]`)
-                    }
+                    allSameBlocksInDisplay.forEach(block => {
+                        let displayCardSets = block.querySelectorAll(`div.one-set`)
+                        while (displayCardSets.length != updatedSetRepetitions) {
+                            const lastIndex = displayCardSets.length - 1
+                            displayCardSets[lastIndex].remove()
+                            displayCardSets = block.querySelectorAll(`div.one-set`)
+                        }
+                    })
                     // delete SetRepetitions
                     const numOfRepsToDelete = origSetReps - updatedSetRepetitions
                     // num_to_delete
@@ -766,26 +802,33 @@ viewCard.addEventListener('click', async function(event) {
                 // create new displays
                 if (updatedSetRepetitions > origSetReps) {
                     // to view card
-                    let viewCardSets = viewCard.querySelectorAll(`div.one-set[data-id="${selectedExerciseSetId}"]`)
-                    while (viewCardSets.length !== updatedSetRepetitions) {
-                        const lastIndex = viewCardSets.length - 1
-                        const newSetDisplay = viewCardSets[lastIndex].cloneNode(true)
-                        if (viewCardSets.length === 1) {
-                            const buttons = newSetDisplay.querySelector('span.editing-mode-buttons')
-                            buttons.remove()
+                    allSameBlocksInView.forEach(block => {
+                        let viewCardSets = block.querySelectorAll(`div.one-set`)
+                        while (viewCardSets.length !== updatedSetRepetitions) {
+                            const lastIndex = viewCardSets.length - 1
+                            const newSetDisplay = viewCardSets[lastIndex].cloneNode(true)
+                            // newSetDisplay.classList.remove('currently-editing')
+                            if (viewCardSets.length === 1) {
+                                const buttons = newSetDisplay.querySelector('span.editing-mode-buttons')
+                                buttons.remove()
+                            }
+                            viewCardSets[lastIndex].parentElement.appendChild(newSetDisplay)
+                            viewCardSets = block.querySelectorAll(`div.one-set`)
+                            // console.log('wha')
+                            // setReps.placeholder = newSetReps
+                            // handleEditButtons(false)
                         }
-                        viewCardSets[lastIndex].parentElement.appendChild(newSetDisplay)
-                        viewCardSets = viewCard.querySelectorAll(`div.one-set[data-id="${selectedExerciseSetId}"]`)
-                        // console.log('wha')
-                    }
+                    })
                     // to display card
-                    let displayCardSets = workoutDisplay.querySelectorAll(`div.one-set[data-id="${selectedExerciseSetId}"]`)
-                    while (displayCardSets.length != updatedSetRepetitions) {
-                        const lastIndex = displayCardSets.length - 1
-                        const newSetDisplay = displayCardSets[lastIndex].cloneNode(true)
-                        displayCardSets[lastIndex].parentElement.appendChild(newSetDisplay)
-                        displayCardSets = workoutDisplay.querySelectorAll(`div.one-set[data-id="${selectedExerciseSetId}"]`)
-                    }
+                    allSameBlocksInDisplay.forEach(block => {
+                        let displayCardSets = block.querySelectorAll(`div.one-set`)
+                        while (displayCardSets.length != updatedSetRepetitions) {
+                            const lastIndex = displayCardSets.length - 1
+                            const newSetDisplay = displayCardSets[lastIndex].cloneNode(true)
+                            displayCardSets[lastIndex].parentElement.appendChild(newSetDisplay)
+                            displayCardSets = block.querySelectorAll(`div.one-set`)
+                        }
+                    })
 
                     const numOfRepsToAdd = updatedSetRepetitions - origSetReps
                     // create new SetRepetitions
@@ -846,7 +889,10 @@ viewCard.addEventListener('click', async function(event) {
                 activeTime.placeholder = updatedExerciseSet.active_time ? updatedExerciseSet.active_time : ""
                 restTime.placeholder = updatedExerciseSet.rest_time ? updatedExerciseSet.rest_time : ""
                 weight.placeholder = updatedExerciseSet.weight ? updatedExerciseSet.weight : ""
-                selectedDiv.classList.remove('currently-editing')
+
+                // remove highlighting
+                allSameDivs.forEach(div => div.classList.remove('currently-editing'))
+
                 handleEditButtons(false)
             }
         })
@@ -854,12 +900,10 @@ viewCard.addEventListener('click', async function(event) {
         // console.log('clicked')
 
         // unhighlight any highlighted divs
-        const allSets = viewCard.querySelectorAll('div.one-set')
-        const lastViewedSet = Array.from(allSets).find(setDiv => setDiv.classList.contains('currently-editing'))
-        if (lastViewedSet) { lastViewedSet.classList.remove('currently-editing') }
+        const allSets = Array.from(viewCard.querySelectorAll('div.one-set'))
+        allSets.forEach(setDiv => setDiv.classList.remove('currently-editing'))
 
         // hide form
-        const updateForm = viewCard.querySelector('div.edit-set-form')
         updateForm.style.display = 'none'
         // enable edit buttons again
         handleEditButtons(false)
@@ -883,6 +927,13 @@ function toggleEditingMode(mode) {
         deleteWorkoutButton.style.display = 'none'
         editModeButton.className = 'mode-off'
         editModeButton.textContent = 'Enter Editing Mode'
+
+        // unhighlight any highlighted divs
+        const allSets = Array.from(viewCard.querySelectorAll('div.one-set'))
+        allSets.forEach(setDiv => setDiv.classList.remove('currently-editing'))
+
+        // hide update form
+        updateForm.style.display = 'none'
     }
 }
 
