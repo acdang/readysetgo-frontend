@@ -11,6 +11,9 @@ const workoutDisplay = document.querySelector('div.workout-display')
 const workoutViewContainer = document.querySelector('div.workout-view')
 const viewCard = workoutViewContainer.querySelector('div.view-card')
 const blockSetContainer = viewCard.querySelector('div#block-set-container')
+const selectExistingBlockForm = document.querySelector('form.add-existing-block-form')
+const workoutSelectExistingBlock = document.querySelector('form.add-existing-block-form select.select-workout')
+const divToSelectWorkoutToAddTo = selectExistingBlockForm.querySelector('div.select-workout-to-add-to')
 
 async function fetchWorkouts() {
     const resp = await fetch('http://127.0.0.1:3000/workouts')
@@ -93,6 +96,69 @@ workoutForm.addEventListener('submit', async function(event) {
     event.target.reset() // form reset
 })
 
+const selectBlockInput = document.querySelector('form.add-existing-block-form select.select-block')
+workoutSelectExistingBlock.addEventListener('change', async function(event) {
+    // get all blocks of workout selected
+    const selectedWorkout = await fetchWorkoutById(Number(event.target.value))
+    const allBlocks = selectedWorkout.blocks
+    // debugger
+    selectBlockInput.dataset.id = Number(event.target.value)
+    selectBlockInput.style.display = ''
+
+    allBlocks.forEach(block => {
+        const newOption = document.createElement('option')
+        newOption.value = block.id
+        newOption.textContent = block.name
+        selectBlockInput.appendChild(newOption)
+    })
+})
+const miniDisplay = selectExistingBlockForm.querySelector('div.mini-display')
+selectBlockInput.addEventListener('change', function(event) {
+    // find a block display of chosen block
+    const workoutId = Number(event.target.dataset.id)
+    const chosenBlock = Number(event.target.value)
+    const existingBlockDisplay = workoutDisplay.querySelector(`div.card[data-id="${workoutId}"] div.one-block[data-id="${chosenBlock}"]`)
+    const copyToDisplay = existingBlockDisplay.cloneNode(true)
+
+    // const miniDisplay = selectExistingBlockForm.querySelector('div.mini-display')
+    if (miniDisplay.firstChild) { miniDisplay.firstChild.remove() }
+    miniDisplay.appendChild(copyToDisplay)
+
+    divToSelectWorkoutToAddTo.style.display = ''
+    const submitButton = selectExistingBlockForm.querySelector('input.submit-button')
+    submitButton.style.display = ''
+})
+
+selectExistingBlockForm.addEventListener('submit', function(event) {
+    event.preventDefault()
+
+    const blockInMiniDisplay = miniDisplay.querySelector('div')
+    const destinationWorkoutId = event.target.destination.value
+    // debugger
+    // add to workout display card
+    const workoutDisplayCard = workoutDisplay.querySelector(`div.card[data-id="${destinationWorkoutId}"] div.workout-info-top`)
+    workoutDisplayCard.appendChild(blockInMiniDisplay)
+
+    // add to view card if open
+    if (workoutViewContainer.style.display !== 'none' && workoutViewContainer.dataset.id == destinationWorkoutId) {
+        const copy = blockInMiniDisplay.cloneNode(true)
+        const container = viewCard.querySelector('div#block-set-container')
+        container.appendChild(copy)
+    }
+
+    fetch('http://127.0.0.1:3000/workout_blocks', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            "Accept": "application/json"
+        },
+        body: JSON.stringify({ 
+            block_id: Number(event.target.block_id.value), 
+            workout_id: Number(destinationWorkoutId)
+        })
+    })
+})
+
 // show Block/Set form if at least 1 workout exists -- NEED TO IMPLEMENT!!!!!!!!!!!
 fetchWorkouts().then(function(workoutsArray) {
     if (workoutsArray.length > 0) {
@@ -118,8 +184,15 @@ function createWorkoutOption(workoutObject) {
     newOption.value = workoutObject.id
     // debugger
     newOption.textContent = workoutObject.name
-    // append to select input
+    // append to create block form select input
     blockWorkoutSelectInput.appendChild(newOption)
+    // append to select existing block form select input (workout to GET block from)
+    const copy = newOption.cloneNode(true)
+    workoutSelectExistingBlock.appendChild(copy)
+    // append to select existing block form select input (workout to ADD block to)
+    const copy2 = newOption.cloneNode(true)
+    const selectInput = divToSelectWorkoutToAddTo.querySelector('select')
+    selectInput.appendChild(copy2)
     // debugger
 }
 
@@ -505,7 +578,7 @@ closeDisplayButtom.addEventListener('click', function() {
 let editingMode = false
 // event handling in Workout view card
 viewCard.addEventListener('click', async function(event) {
-    event.stopPropagation()
+    // event.stopPropagation()
     // editing mode button
     if (event.target.matches('button#editing-mode-button')) {
         const editModeButton = event.target

@@ -70,14 +70,14 @@
             </form>
         </div>
 
-        <div>
-            <form class="create-block-set-form">
+        <div class="row">
+            <form class="create-block-set-form column">
                 <h3>Create New Block</h3>
                 <label>Block name:</label>
                 <input type="text" name="name" id="block-name" placeholder="Custom name (opt.)" class=""><br>
                 <label>Add block to workout:</label>
                 <select name="workout_id" class="block-exercise-select">
-
+                    <option value="" selected disabled>Please select</option>
                 </select>
                 <div class="set-form-container" style="background-color: lightgray;">
                     <h4>Add sets</h4>
@@ -104,6 +104,26 @@
                 <br><button type="button" id="add-set">Add another set</button>
                 <br><br>
                 <input type="submit" name="submit" value="Create New Block" class="">
+            </form>
+            <form class="add-existing-block-form column">
+                <h3>Add Existing Block to Workout</h3>
+                <label>Select a Block from ...</label><br>
+                <select name="workout_id" class="select-workout">
+                    <option value="" selected disabled>Select a Workout</option>
+                </select><br><br>
+                <select name="block_id" class="select-block" style="display: none;">
+                    <option value="" selected disabled>Select a Block to add</option>
+                </select>
+                <div class="mini-display">
+
+                </div><br>
+                <div class="select-workout-to-add-to" style="display: none;">
+                    <label>Add this Block to ...</label><br>
+                    <select name="destination" class="select-workout">
+                        <option value="" selected disabled>Select a Workout</option>
+                    </select>
+                </div><br><br>
+                <input type="submit" name="submit" value="Add Block" class="submit-button" style="display: none;">
             </form>
         </div>
     </body>

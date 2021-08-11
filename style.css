@@ -94,3 +94,16 @@
     display: none;
     margin-top: 1em;
 }
+
+.add-existing-block-form {
+    width: 50%;
+}
+
+.create-block-set-form {
+    width: 50%;
+}
+
+.mini-display {
+    width: 50%;
+    margin: auto;
+}
