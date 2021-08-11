@@ -1,3 +1,4 @@
+
 const workoutForm = document.querySelector('form.create-workout-form')
 const workoutNameInput = document.querySelector('form.create-workout-form input#workout-name')
 const blockExerciseSetForm = document.querySelector('form.create-block-set-form')
@@ -550,7 +551,7 @@ workoutDisplay.addEventListener('click', async function(event) {
         viewWorkoutName.textContent = workoutObject.name
         
         const editButton = viewCard.querySelector('button#editing-mode-button')
-        editButton.className = 'editing-mode-off'
+        editButton.className = 'mode-off'
         // display Blocks and ExerciseSets on left side
         const blocksArray = workoutObject.blocks // need to have `has_many :blocks` in Workout serializer
         // debugger
@@ -583,14 +584,25 @@ viewCard.addEventListener('click', async function(event) {
     if (event.target.matches('button#editing-mode-button')) {
         const editModeButton = event.target
         // to turn on editing mode
-        if (editModeButton.className === 'editing-mode-off') {
+        if (editModeButton.className === 'mode-off') {
             toggleEditingMode("on")
-            editModeButton.className = 'editing-mode-on'
+            editModeButton.className = 'mode-on'
             editModeButton.textContent = 'Exit Editing Mode'
-        } else if (editModeButton.className === 'editing-mode-on') {
+        } else if (editModeButton.className === 'mode-on') {
             toggleEditingMode("off")
-            editModeButton.className = 'editing-mode-off'
+            editModeButton.className = 'mode-off'
             editModeButton.textContent = 'Enter Editing Mode'
+        }
+    } else if (event.target.matches('button#begin-workout-button')) {
+        const workoutModeButton = event.target
+        if (editModeButton.className === 'mode-off') {
+            toggleWorkoutMode("on")
+            workoutModeButton.className = 'mode-on'
+            workoutModeButton.textContent = 'Begin Workout'
+        } else if (editModeButton.className === 'mode-on') {
+            toggleWorkoutMode("off")
+            workoutModeButton.className = 'mode-off'
+            workoutModeButton.textContent = 'Exit Workout'
         }
     } else if (event.target.matches('button.delete-block-button')) {
         const deleteBlockButton = event.target
@@ -843,4 +855,8 @@ function toggleEditingMode(mode) {
         allDeleteBlockButtons.forEach(button => button.style.display = 'none')
         deleteWorkoutButton.style.display = 'none'
     }
+}
+
+function toggleWorkoutMode(mode) {
+    
 }

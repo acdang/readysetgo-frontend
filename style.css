@@ -76,11 +76,11 @@
     justify-content: space-between;
 }
 
-.editing-mode-off {
+.mode-off {
     background-color: lightgreen;
 }
 
-.editing-mode-on {
+.mode-on {
     background-color: lightcoral;
 }
 

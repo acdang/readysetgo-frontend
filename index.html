@@ -14,11 +14,14 @@
                     <!-- should this be "Close" instead? -->
                     <button id="close-display">X</button> 
                 </div>
-                <h2 id="specific-workout-name">Workout details here...</h2>
+                <div>
+                    <span><h2 id="specific-workout-name">Workout details here...</h2></span>
+                    <span><button id="begin-workout-button" class="mode-off">Begin Workout</button></span>
+                </div><br>
                 <div id="display-container" class="row">
                     <div id="workout-info-side" class="column">
                         <div class="button-flex-end">
-                            <button id="editing-mode-button" class="editing-mode-off">Enter Editing Mode</button>
+                            <button id="editing-mode-button" class="mode-off">Enter Editing Mode</button>
                         </div>
                         <div id="delete-workout-button-container" class="button-flex-end">
                             <button id="delete-workout-button">Delete Workout</button>
@@ -54,7 +57,21 @@
                             </form>
                         </div>
                         <div class="exercise-display">
-                            <!-- display:none until set clicked -->
+                            <h3 id="exercise-display-block-name">Block Name</h3>
+                            <h1 id="exercise-display-exercise-name">Exercise Name</h1>
+                            <h2 id="exercise-display-reps"># Repetitions</h2>
+                            <a id="exercise-display-link" href="#"><caption>Exercise Information</caption></a>
+                            <div id="timers">
+                                <div id="active-timer">
+                                    
+                                </div>
+                                <div id="rest-timer">
+
+                                </div>
+                            </div>
+                            <div id="next-set-button" class="button-flex-end">
+                                <button>Next Set</button>
+                            </div>
                         </div>
                     </div>
                 </div>
