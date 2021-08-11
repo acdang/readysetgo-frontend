@@ -107,6 +107,10 @@ workoutSelectExistingBlock.addEventListener('change', async function(event) {
     selectBlockInput.dataset.id = Number(event.target.value)
     selectBlockInput.style.display = ''
 
+    while (selectBlockInput.childNodes.length != 1) {
+        selectBlockInput.lastChild.remove()
+    }
+
     allBlocks.forEach(block => {
         const newOption = document.createElement('option')
         newOption.value = block.id
@@ -115,6 +119,7 @@ workoutSelectExistingBlock.addEventListener('change', async function(event) {
     })
 })
 const miniDisplay = selectExistingBlockForm.querySelector('div.mini-display')
+const submitButton = selectExistingBlockForm.querySelector('input.submit-button')
 selectBlockInput.addEventListener('change', function(event) {
     // find a block display of chosen block
     const workoutId = Number(event.target.dataset.id)
@@ -127,7 +132,7 @@ selectBlockInput.addEventListener('change', function(event) {
     miniDisplay.appendChild(copyToDisplay)
 
     divToSelectWorkoutToAddTo.style.display = ''
-    const submitButton = selectExistingBlockForm.querySelector('input.submit-button')
+    // const submitButton = selectExistingBlockForm.querySelector('input.submit-button')
     submitButton.style.display = ''
 })
 
@@ -159,6 +164,12 @@ selectExistingBlockForm.addEventListener('submit', function(event) {
             workout_id: Number(destinationWorkoutId)
         })
     })
+
+    selectBlockInput.style.display = 'none'
+    divToSelectWorkoutToAddTo.style.display = 'none'
+    submitButton.style.display = 'none'
+
+    event.target.reset()
 })
 
 // show Block/Set form if at least 1 workout exists -- NEED TO IMPLEMENT!!!!!!!!!!!
@@ -626,6 +637,10 @@ viewCard.addEventListener('click', async function(event) {
         const allBlocksInView = Array.from(viewCard.querySelectorAll('div.one-block'))
         const indexOfSelectedBlock = allBlocksInView.indexOf(blockSetDisplayInView)
 
+        // get index of this Block out of all of it duplicate Blocks in this Workout
+        const allSameBlocksInView = Array.from(viewCard.querySelectorAll(`div.one-block[data-id="${selectedBlockId}"]`))
+        const indexOfBlockToBeRemoved = allSameBlocksInView.indexOf(blockSetDisplayInView)
+
         // remove all display of this Block from view
         blockSetDisplayInView.remove()
         // remove all display of this Block from its Workout display card
@@ -644,6 +659,20 @@ viewCard.addEventListener('click', async function(event) {
         // // remove selected Block+Set display from display card
         // const blockSetDisplayInDisplay = workoutDisplay.querySelector(`div.one-block[data-id="${selectedBlockId}"]`)
         // blockSetDisplayInDisplay.remove()
+
+        // removing this WorkoutBlock instance from Workout
+        fetch('http://127.0.0.1:3000/workout_blocks/remove', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                "Accept": "application/json"
+            },
+            body: JSON.stringify({
+                block_id: selectedBlockId, 
+                workout_id: workoutId,
+                index_to_remove: indexOfBlockToBeRemoved
+            })
+        })
 
         // delete fetch request
         // const response = await fetch(`http://127.0.0.1:3000/blocks/${selectedBlockId}`, {
