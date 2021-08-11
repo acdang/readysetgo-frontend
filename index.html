@@ -54,13 +54,18 @@
                                 <label>Weight (in lbs):</label>
                                 <input type="number" name="weight" class="set-weight" ><br><br>
                                 <input type="submit" name="submit" value="Update Set" class="">
+                                <br><br>
+                                <button class="cancel-edit-button">Cancel</button>
                             </form>
                         </div>
                         <div class="exercise-display">
                             <h3 id="exercise-display-block-name">Block Name</h3>
                             <h1 id="exercise-display-exercise-name">Exercise Name</h1>
                             <h2 id="exercise-display-reps"># Repetitions</h2>
-                            <a id="exercise-display-link" href="#"><caption>Exercise Information</caption></a>
+                            <h2 id="exercise-display-active-time">Active Time</h2>
+                            <p>Weight: <span id="exercise-display-weight"></span></p>
+                            <p>Rest time: <span id="exercise-display-rest-time"></span></p>
+                            <a id="exercise-display-link" target="_blank" href=""><caption>Info about this exercise</caption></a>
                             <div id="timers">
                                 <div id="active-timer">
                                     
@@ -145,3 +150,5 @@
         </div>
     </body>
 </html>
+
+

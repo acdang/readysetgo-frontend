@@ -107,3 +107,11 @@
     width: 50%;
     margin: auto;
 }
+
+.currently-viewing {
+    background-color: white;
+}
+
+.currently-editing {
+    background-color: lightyellow;
+}

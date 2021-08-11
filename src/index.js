@@ -533,6 +533,8 @@ fetchWorkouts().then(function(workoutsArray) {
 // clicking on "View Workout" button on a Workout display card shows the specific Workout info card below
 workoutDisplay.addEventListener('click', async function(event) {
     if (event.target.matches('button')) { // likely need to specify what this button is with class name
+        toggleEditingMode("off")
+        toggleWorkoutMode("off")
         // clear contents
         while (blockSetContainer.firstChild) {
             blockSetContainer.removeChild(blockSetContainer.lastChild);
@@ -550,8 +552,8 @@ workoutDisplay.addEventListener('click', async function(event) {
         const viewWorkoutName = viewCard.querySelector('h2#specific-workout-name')
         viewWorkoutName.textContent = workoutObject.name
         
-        const editButton = viewCard.querySelector('button#editing-mode-button')
-        editButton.className = 'mode-off'
+        // const editButton = viewCard.querySelector('button#editing-mode-button')
+        // editButton.className = 'mode-off'
         // display Blocks and ExerciseSets on left side
         const blocksArray = workoutObject.blocks // need to have `has_many :blocks` in Workout serializer
         // debugger
@@ -586,24 +588,26 @@ viewCard.addEventListener('click', async function(event) {
         // to turn on editing mode
         if (editModeButton.className === 'mode-off') {
             toggleEditingMode("on")
-            editModeButton.className = 'mode-on'
-            editModeButton.textContent = 'Exit Editing Mode'
+            // editModeButton.className = 'mode-on'
+            // editModeButton.textContent = 'Exit Editing Mode'
         } else if (editModeButton.className === 'mode-on') {
             toggleEditingMode("off")
-            editModeButton.className = 'mode-off'
-            editModeButton.textContent = 'Enter Editing Mode'
+            // editModeButton.className = 'mode-off'
+            // editModeButton.textContent = 'Enter Editing Mode'
         }
     } else if (event.target.matches('button#begin-workout-button')) {
         const workoutModeButton = event.target
-        if (editModeButton.className === 'mode-off') {
+        if (workoutModeButton.className === 'mode-off') {
             toggleWorkoutMode("on")
-            workoutModeButton.className = 'mode-on'
-            workoutModeButton.textContent = 'Begin Workout'
-        } else if (editModeButton.className === 'mode-on') {
+            // workoutModeButton.className = 'mode-on'
+            // workoutModeButton.textContent = 'Exit Workout'
+        } else if (workoutModeButton.className === 'mode-on') {
             toggleWorkoutMode("off")
-            workoutModeButton.className = 'mode-off'
-            workoutModeButton.textContent = 'Exit Workout'
+            // workoutModeButton.className = 'mode-off'
+            // workoutModeButton.textContent = 'Begin Workout'
         }
+    } else if (event.target.matches('div#next-set-button button')) {
+        handleNextSet()
     } else if (event.target.matches('button.delete-block-button')) {
         const deleteBlockButton = event.target
         // get the specific Block+Set display div
@@ -651,16 +655,21 @@ viewCard.addEventListener('click', async function(event) {
             method: 'DELETE'
         })
     } else if (event.target.matches('button.edit-set-button')) {
+        handleEditButtons(true)
         const editSetButton = event.target
+
+        // highlight selected div
+        const selectedDiv = editSetButton.closest('div.one-set')
+        selectedDiv.classList.add('currently-editing')
         // get the selected ExerciseSet id
-        const selectedExerciseSetId = Number(editSetButton.closest('div.one-set').dataset.id)
+        const selectedExerciseSetId = Number(selectedDiv.dataset.id)
         // get the selected Set
         const selectedSet = await fetchExerciseSetById(selectedExerciseSetId)
         // show update form
         const updateForm = viewCard.querySelector('div.edit-set-form')
         updateForm.style.display = 'block'
         updateForm.dataset.id = selectedExerciseSetId
-        console.log(selectedExerciseSetId)
+        // console.log(selectedExerciseSetId)
 
         // pre-fill fields with current values
         const exerciseSelect = updateForm.querySelector('select')
@@ -837,26 +846,154 @@ viewCard.addEventListener('click', async function(event) {
                 activeTime.placeholder = updatedExerciseSet.active_time ? updatedExerciseSet.active_time : ""
                 restTime.placeholder = updatedExerciseSet.rest_time ? updatedExerciseSet.rest_time : ""
                 weight.placeholder = updatedExerciseSet.weight ? updatedExerciseSet.weight : ""
+                selectedDiv.classList.remove('currently-editing')
+                handleEditButtons(false)
             }
         })
+    } else if (event.target.matches('button.cancel-edit-button')) {
+        // console.log('clicked')
+
+        // unhighlight any highlighted divs
+        const allSets = viewCard.querySelectorAll('div.one-set')
+        const lastViewedSet = Array.from(allSets).find(setDiv => setDiv.classList.contains('currently-editing'))
+        if (lastViewedSet) { lastViewedSet.classList.remove('currently-editing') }
+
+        // hide form
+        const updateForm = viewCard.querySelector('div.edit-set-form')
+        updateForm.style.display = 'none'
+        // enable edit buttons again
+        handleEditButtons(false)
     }
 })
 
 function toggleEditingMode(mode) {
+    const editModeButton = viewCard.querySelector('button#editing-mode-button')
     const allEditingButtonSpans = viewCard.querySelectorAll('span.editing-mode-buttons')
     const allDeleteBlockButtons = viewCard.querySelectorAll('button.delete-block-button')
     const deleteWorkoutButton = viewCard.querySelector('button#delete-workout-button')
     if (mode === "on") {
         allEditingButtonSpans.forEach(span => span.style.display = '')
         allDeleteBlockButtons.forEach(button => button.style.display = '')
+        editModeButton.className = 'mode-on'
+        editModeButton.textContent = 'Exit Editing Mode'
         deleteWorkoutButton.style.display = 'block'
     } else if (mode === "off") {
         allEditingButtonSpans.forEach(span => span.style.display = 'none')
         allDeleteBlockButtons.forEach(button => button.style.display = 'none')
         deleteWorkoutButton.style.display = 'none'
+        editModeButton.className = 'mode-off'
+        editModeButton.textContent = 'Enter Editing Mode'
     }
 }
 
-function toggleWorkoutMode(mode) {
-    
+const exerciseDisplayDiv = viewCard.querySelector('div.exercise-display')
+async function toggleWorkoutMode(mode) {
+    const workoutModeButton = viewCard.querySelector('button#begin-workout-button')
+
+    // unhighlight any highlighted divs
+    const allSets = viewCard.querySelectorAll('div.one-set')
+    const lastViewedSet = Array.from(allSets).find(setDiv => setDiv.classList.contains('currently-viewing'))
+    if (lastViewedSet) { lastViewedSet.classList.remove('currently-viewing') }
+
+    // debugger
+    if (mode === "on") {
+        workoutModeButton.className = 'mode-on'
+        workoutModeButton.textContent = 'Exit Workout'
+        // get first Set id
+        const firstId = allSets[0].dataset.id
+        // allSets[0].classList.add('currently-viewing')
+        // fetch Set
+        const firstSet = await fetchExerciseSetById(firstId)
+
+        // const lastViewedSet = Array.from(allSets).find(setDiv => setDiv.classList.contains('currently-viewing'))
+        // if (lastViewedSet) { lastViewedSet.classList.remove('currently-viewing') }
+
+        exerciseDisplayDiv.style.display = 'block'
+        // show first set repetition
+        displayExerciseInfo(firstSet, allSets[0])
+        const nextButton = exerciseDisplayDiv.querySelector('div#next-set-button button')
+        nextButton.disabled = false
+    } else if (mode === "off") {
+        exerciseDisplayDiv.style.display = 'none'
+        workoutModeButton.className = 'mode-off'
+        workoutModeButton.textContent = 'Begin Workout'
+    }
 }
+
+function displayExerciseInfo(firstSet, htmlElement) {
+    // highlight the div
+    htmlElement.classList.add('currently-viewing')
+    // block name
+    const blockDiv = htmlElement.closest('div.one-block')
+    const blockNameInDiv = blockDiv.firstChild.firstChild.textContent
+    const blockName = exerciseDisplayDiv.querySelector('h3#exercise-display-block-name')
+    blockName.textContent = blockNameInDiv
+
+    // exercise name
+    const exerciseName = exerciseDisplayDiv.querySelector('h1#exercise-display-exercise-name')
+    exerciseName.textContent = firstSet.exercise.name
+
+    // exercise repetition/active time display
+    const exerciseReps = exerciseDisplayDiv.querySelector('h2#exercise-display-reps')
+    const activeTime = exerciseDisplayDiv.querySelector('h2#exercise-display-active-time')
+    if (firstSet.exercise_rep_num) {
+        exerciseReps.textContent = firstSet.exercise_rep_num > 1 ? `${firstSet.exercise_rep_num} reps` : `${firstSet.exercise_rep_num} rep`
+    } else {
+        exerciseReps.style.display = 'none'
+    }
+    if (firstSet.active_time) {
+        activeTime.textContent = firstSet.active_time > 1 ? `${firstSet.active_time} seconds` : `${firstSet.active_time} second`
+    } else {
+        activeTime.style.display = 'none'
+    }
+
+    // weight & rest time display
+    if (firstSet.weight) {
+        const weight = exerciseDisplayDiv.querySelector('span#exercise-display-weight')
+        weight.textContent = firstSet.weight
+    }
+    if (firstSet.rest_time) {
+        const restTime = exerciseDisplayDiv.querySelector('span#exercise-display-rest-time')
+        restTime.textContent = firstSet.rest_time > 1 ? `${firstSet.rest_time} seconds` : `${firstSet.rest_time} second`
+    }
+    // link display
+    const refLink = exerciseDisplayDiv.querySelector('a#exercise-display-link')
+    if (firstSet.exercise.ref_link) {
+        refLink.href = firstSet.exercise.ref_link
+    } else {
+        refLink.style.display = 'none'
+    }
+}
+
+async function handleNextSet() {
+    // console.log('clicked')
+    const allSets = Array.from(viewCard.querySelectorAll('div.one-set'))
+    const lastViewedSet = allSets.find(setDiv => setDiv.classList.contains('currently-viewing'))
+    lastViewedSet.classList.remove('currently-viewing')
+    const lastViewedSetIndex = allSets.indexOf(lastViewedSet)
+
+    if (lastViewedSetIndex + 1 === allSets.length - 1) {
+        const nextButton = exerciseDisplayDiv.querySelector('div#next-set-button button')
+        nextButton.disabled = true
+    }
+    const nowViewingSet = allSets[lastViewedSetIndex + 1]
+    nowViewingSet.classList.add('currently-viewing')
+    const nowViewingSetObj = await fetchExerciseSetById(Number(nowViewingSet.dataset.id))
+    displayExerciseInfo(nowViewingSetObj, nowViewingSet)
+}
+
+function handleEditButtons(editing) {
+    if (editing) {
+       let buttons = document.querySelectorAll('button.edit-set-button')
+       buttons.forEach(button => {
+           button.className = 'disabled-edit-set-button'
+           button.disabled = true
+        })
+    } else {
+       let buttons = document.querySelectorAll('button.disabled-edit-set-button')
+       buttons.forEach(button => {
+           button.className = 'edit-set-button'
+           button.disabled = false
+        })
+    }
+ }
