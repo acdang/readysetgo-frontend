@@ -634,8 +634,6 @@ viewCard.addEventListener('click', async function(event) {
             // workoutModeButton.className = 'mode-off'
             // workoutModeButton.textContent = 'Begin Workout'
         }
-    } else if (event.target.matches('div#next-set-button button')) {
-        handleNextSet()
     } else if (event.target.matches('button.delete-block-button')) {
         const deleteBlockButton = event.target
         // get the specific Block+Set display div
@@ -719,7 +717,11 @@ viewCard.addEventListener('click', async function(event) {
         const response = await fetch(`http://127.0.0.1:3000/workouts/${selectedWorkoutId}`, {
             method: 'DELETE'
         })
-    } else if (event.target.matches('button.edit-set-button')) {
+    } else if (event.target.matches('div#next-set-button button')) {
+        // const nextButton = exerciseDisplayDiv.querySelector('div#next-set-button button')
+        handleNextSet()
+    }
+    else if (event.target.matches('button.edit-set-button')) {
         handleEditButtons(true)
         const editSetButton = event.target
 
@@ -1092,12 +1094,15 @@ function displayExerciseInfo(firstSet, htmlElement) {
     // exercise repetition/active time display
     const exerciseReps = exerciseDisplayDiv.querySelector('h2#exercise-display-reps')
     const activeTime = exerciseDisplayDiv.querySelector('h2#exercise-display-active-time')
+    // console.log(activeTime.style.display)
     if (firstSet.exercise_rep_num) {
+        if (exerciseReps.style.display === 'none') { exerciseReps.style.display = '' }
         exerciseReps.textContent = firstSet.exercise_rep_num > 1 ? `${firstSet.exercise_rep_num} reps` : `${firstSet.exercise_rep_num} rep`
     } else {
         exerciseReps.style.display = 'none'
     }
     if (firstSet.active_time) {
+        if (activeTime.style.display === 'none') { activeTime.style.display = '' }
         activeTime.textContent = firstSet.active_time > 1 ? `${firstSet.active_time} seconds` : `${firstSet.active_time} second`
 
         const activeTimerDiv = exerciseDisplayDiv.querySelector('div#active-timer-div')
@@ -1173,13 +1178,21 @@ function displayExerciseInfo(firstSet, htmlElement) {
     } else {
         refLink.style.display = 'none'
     }
+
+    // next button handling
+    // const nextButton = exerciseDisplayDiv.querySelector('div#next-set-button button')
+    // nextButton.addEventListener('click', () => handleNextSet())
 }
 
-async function handleNextSet() {
+const nextButton = exerciseDisplayDiv.querySelector('div#next-set-button button')
+nextButton.addEventListener('click', (event) => handleNextSet(event))
+
+async function handleNextSet(event) {
+    event.stopPropagation()
     // console.log('clicked')
     const allSets = Array.from(viewCard.querySelectorAll('div.one-set'))
     const lastViewedSet = allSets.find(setDiv => setDiv.classList.contains('currently-viewing'))
-    lastViewedSet.classList.remove('currently-viewing')
+    if (lastViewedSet) { lastViewedSet.classList.remove('currently-viewing') }
     const lastViewedSetIndex = allSets.indexOf(lastViewedSet)
 
     if (lastViewedSetIndex + 1 === allSets.length - 1) {
@@ -1187,7 +1200,7 @@ async function handleNextSet() {
         nextButton.disabled = true
     }
     const nowViewingSet = allSets[lastViewedSetIndex + 1]
-    nowViewingSet.classList.add('currently-viewing')
+    // nowViewingSet.classList.add('currently-viewing')
     const nowViewingSetObj = await fetchExerciseSetById(Number(nowViewingSet.dataset.id))
     displayExerciseInfo(nowViewingSetObj, nowViewingSet)
 }
