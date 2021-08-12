@@ -160,19 +160,27 @@ function autoWorkoutNameValue(input) {
 // disable the other field when one is filled (for both create and edit forms)
 const exerciseRepField = blockExerciseSetForm.querySelector('input.exercise-rep-num')
 const activeTimeField = blockExerciseSetForm.querySelector('input.set-active-time')
-// hide submit button on load
-// show submit button if either field has input
-const createBlockButton = blockExerciseSetForm.querySelector('input.create-block-button')
-createBlockButton.style.display = 'none'
 exerciseRepField.addEventListener("input", function () {
     activeTimeField.disabled = this.value != ""
     activeTimeField.placeholder = 'To edit this, cannot have exercise repetitions'
-    createBlockButton.style.display = ''
+    // selectBlockInput.value ? createBlockButton.style.display = '' : ''
 })
 activeTimeField.addEventListener("input", function () {
     exerciseRepField.disabled = this.value != ""
     exerciseRepField.placeholder = 'To edit this, cannot have active time'
-    createBlockButton.style.display = ''
+    // selectBlockInput.value ? createBlockButton.style.display = '' : ''
+})
+
+// hide submit button on load
+// show submit button if either field has input AND if workout select has valid value AND exercise select has valid value
+const selectBlockInputInCreate = document.querySelector('form.create-block-set-form select.block-exercise-select')
+const createBlockButton = blockExerciseSetForm.querySelector('input.create-block-button')
+createBlockButton.style.display = 'none'
+blockExerciseSetForm.addEventListener('mouseover', function() {
+    if (selectBlockInputInCreate.value && exerciseSetExerciseSelectInput.value && (exerciseRepField.value || activeTimeField.value)) {
+        // console.log('hello')
+        createBlockButton.style.display = ''
+    }
 })
 
 // submission handling on create new Block & ExerciseSet(s) form
@@ -269,6 +277,23 @@ blockExerciseSetForm.addEventListener('submit', async function(event) {
     event.target.reset() // form reset
 })
 
+/* 
+    NOTE: The "Add Existing Block to Workout" form adds a Block that already exists in the db
+    to a Workout by creating a new WorkoutBlock association. The user can expect that adding an existing
+    Block to a Workout will throw off the order of Blocks.
+
+    For example, "Block 1" was created and added to Workout 1. Then "New Block" is created and added
+    to Workout 2. If the user attempts to add the existing "Block 1" TO Workout 2, then in the database,
+    Workout 2 will list "Block 1" BEFORE "New Block" (because "Block 1" was technically created before 
+    "New Block" even though it was added after). I have not figured out an implementation to order by
+    block addition time.
+
+    ANOTHER NOTE: To continue the example above, Workout 2 has "Block 1" (an existing block with another
+    instance in Workout 1) and "New Block". If the user deletes "Block 1" from Workout 2, it WILL NOT delete
+    the block itself. Rather, it will delete the association between "Block 1" and Workout 2. "Block 1" will
+    remain in Workout 1. A block is deleted when it has 0 associations to an existing workout.
+*/
+
 // when user selects a Workout to select a Block from (in the Add Existing Block Form)
 const selectBlockInput = document.querySelector('form.add-existing-block-form select.select-block')
 workoutSelectExistingBlock.addEventListener('change', async function(event) {
@@ -361,7 +386,10 @@ addExerciseSetButton.addEventListener('click', function() {
 
     // reset fields
     const allInputs = newSetFormBlock.querySelectorAll('input')
-    allInputs.forEach(inputField => inputField.value = '')
+    allInputs.forEach(inputField => {
+        inputField.value = ''
+        if (inputField.disabled) { inputField.disabled = false }
+    })
     
     const lineBreak = document.createElement('hr')
     
