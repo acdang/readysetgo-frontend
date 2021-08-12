@@ -3,6 +3,20 @@
 
 /* 
     Some issues I am aware of but didn't have time to fix:
+
+    - UPDATE FORM ISSUE: the edit/update form is triggered to display when an
+    'edit' button is clicked. Each time this is done, the event continues to 
+    occur, which causes big errors. 
+    - lack of form validations & error message display
+    - input field effects (e.g. disable) not working as intended under all circumstances
+    - issue with Add Existing Block to Workout (explained in comments around line 299)
+    
+    Example scenario: 
+    fill out update form once -> submit -> fill and submit again 
+    -> the values created when the form was opened the first time (via edit button)
+    continue to exist and affect the effects of the next form instance
+
+    the notes below are earlier logs of aformentioned issue 
     - sometimes, changing an ExerciseSet's num of set repetition (in edit form)
     will cause an extra set reptitions to be added/removed. 
         For ex - changing "ExerciseSet 1" from 3 set reps to 2 set reps
@@ -15,8 +29,6 @@
     - will look into removeEventListener() in the future
     - placeholder/default names for workouts and blocks don't reset after a
     workout or block is deleted. have to refresh page to update the placeholder names
-    - lack of form validations & error message display
-    - issue with Add Existing Block to Workout (explained in comments around line 299)
 
 */
 
