@@ -1,32 +1,78 @@
+body {
+    font-family: Arial, Helvetica, sans-serif;
+    background-color: #F5F5F5;
+    font-size: 16px;
+}
+/* .hide-on-load {
+    display: none;
+} */
+
 .workout-display {
     margin: 2rem;
 }
 
 .card {
     /* text-align: center; */
-    border: grey solid 1px;
-    padding: 1rem;
-    width: 15rem;
+    background-color: white;
+    border-radius: 20px;
+    /* border: grey solid 1px; */
+    padding: 2rem;
+    width: 20rem;
     /* height: 25rem; */
     display: inline-grid;
-    margin: 1rem 2rem;
-    box-shadow: 3px 4px black;
+    margin: 1rem;
+    /* box-shadow: 3px 4px black; */
 }
 
 .view-card {
     /* text-align: center; */
-    border: grey solid 1px;
-    padding: 1rem;
+    /* border: grey solid 1px; */
+    background-color: white;
+    border-radius: 20px;
+    padding: 1.5rem;
     width: 80%;
     /* height: 25rem; */
     display: flex;
     flex-direction: column;
-    margin: 1rem 2rem;
-    box-shadow: 3px 4px black;
+    /* margin: 1rem 2rem; */
+    margin: auto;
+    /* box-shadow: 3px 4px black; */
 }
 
-.workout-view {
-    display: none;
+/* .workout-view {
+    
+} */
+
+.create-workout-form-div {
+    background-color: white;
+    border-radius: 20px;
+    padding: 1.5rem;
+    margin: 1em;
+}
+
+.create-block-set-form {
+    background-color: white;
+    border-radius: 20px;
+    padding: 1.5rem;
+    margin: 1em;
+}
+
+.set-form-container {
+    background-color: #EFEFEF;
+    padding: 1em;
+    margin-top: 1em;
+}
+
+.set-form-block {
+    padding-bottom: 1em;
+    padding-top: 1em;
+}
+
+.add-existing-block-form {
+    background-color: white;
+    border-radius: 20px;
+    padding: 1.5rem;
+    margin: 1em;
 }
 
 .row {
@@ -40,7 +86,7 @@
 }
 
 #workout-info-side {
-    background-color: powderblue;
+    /* background-color: powderblue; */
     width: 40%;
 }
 
@@ -51,10 +97,11 @@
 .button-flex-end {
     display: flex;
     justify-content: flex-end;
+    align-content: center;
 }
 
 .edit-set-form {
-    display: none;
+    /* display: none; */
     height: 100%;
     width: 50%;
     margin: auto;
@@ -63,36 +110,26 @@
 }
 
 .exercise-display {
-    display: none;
+    /* display: none; */
     height: 100%;
+    width: 80%;
+    margin: auto;
     /* background-color: seagreen; */
 }
 
 .one-set {
-    margin: 0.5em;
-    padding: 0.5em;
-    background-color:#FFD580;
+    margin: 0.2em;
+    padding: 1em;
+    /* border-radius: 10px; */
+    background-color:#EEEEEE;
     display: flex;
     justify-content: space-between;
-}
-
-.mode-off {
-    background-color: lightgreen;
-}
-
-.mode-on {
-    background-color: lightcoral;
 }
 
 .block-name-container {
     display: flex;
     justify-content: space-between;
     align-items: center;
-}
-
-#delete-workout-button {
-    display: none;
-    margin-top: 1em;
 }
 
 .add-existing-block-form {
@@ -109,9 +146,157 @@
 }
 
 .currently-viewing {
-    background-color: white;
+    background-color: black;
+    color: white;
 }
 
 .currently-editing {
     background-color: lightyellow;
 }
+
+/* BUTTONS */
+.view-workout-button {
+    background-color: black;
+    color: white;
+    border: none;
+    border-radius: 10px;
+    padding: 0.8rem 1.5rem;
+    margin-top: 1rem;
+}
+#begin-workout-button.mode-off {
+    background-color: #4CA1A3;
+    border: solid 2px;
+    border-color: #4CA1A3;
+    color: white;
+    /* border: none; */
+    border-radius: 10px;
+    padding: 0.6rem;
+}
+#begin-workout-button.mode-on {
+    background-color: white;
+    border: solid 2px;
+    border-color: #4CA1A3;
+    color: #4CA1A3;
+    border-radius: 10px;
+    padding: 0.6rem;
+    
+}
+.button-flex-end {
+    display: flex;
+    justify-content: flex-end;
+    align-content: center;
+}
+#delete-workout-button {
+    /* display: none; */
+    margin-top: 1em;
+}
+.edit-set-button {
+    background-color: #0A1931;
+    color:white;
+    border: none;
+    border-radius: 5px;
+    padding: 0.3em 0.5em;
+    margin-right: 0.5em;
+}
+.delete-set-button {
+    background-color: #8D2828;
+    color:white;
+    border: none;
+    border-radius: 5px;
+    padding: 0.3em 0.5em;
+}
+.delete-block-button {
+    background-color: white;
+    border-color: #8D2828;
+    border: solid 1px;
+    color:#8D2828;
+    border-radius: 5px;
+    padding: 0.3em 0.5em;
+}
+#delete-workout-button {
+    background-color: black;
+    color:white;
+    border: none;
+    border-radius: 5px;
+    padding: 0.7em;
+}
+
+/* TIMERS */
+.timer-contents {
+    background-color: #dbeced;
+
+    display: flex;
+    justify-content: space-evenly;
+    padding: 2em;
+}
+#rest-timer {
+    font-size: larger;
+}
+#active-timer {
+    font-size: larger;
+}
+
+/* Below from https://www.w3schools.com/howto/howto_css_switch.asp */
+/* The switch - the box around the slider */
+.switch {
+    position: relative;
+    display: inline-block;
+    width: 60px;
+    height: 34px;
+    align-self: center;
+  }
+  
+  /* Hide default HTML checkbox */
+  .switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+  }
+  
+  /* The slider */
+  .slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #ccc;
+    -webkit-transition: .4s;
+    transition: .4s;
+  }
+  
+  .slider:before {
+    position: absolute;
+    content: "";
+    height: 26px;
+    width: 26px;
+    left: 4px;
+    bottom: 4px;
+    background-color: white;
+    -webkit-transition: .4s;
+    transition: .4s;
+  }
+  
+  input:checked + .slider {
+    background-color: #4CA1A3;
+  }
+  
+  input:focus + .slider {
+    box-shadow: 0 0 1px #4CA1A3;
+  }
+  
+  input:checked + .slider:before {
+    -webkit-transform: translateX(26px);
+    -ms-transform: translateX(26px);
+    transform: translateX(26px);
+  }
+  
+  /* Rounded sliders */
+  .slider.round {
+    border-radius: 34px;
+  }
+  
+  .slider.round:before {
+    border-radius: 50%;
+  }

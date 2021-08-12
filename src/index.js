@@ -445,6 +445,7 @@ function renderWorkoutDisplayCard(workoutObject) {
     buttonDiv.className = 'button-flex-end'
     const viewButton = document.createElement('button')
     viewButton.textContent = "View Workout"
+    viewButton.className = 'view-workout-button'
 
     buttonDiv.appendChild(viewButton)
     outerDiv.appendChild(buttonDiv)
@@ -461,7 +462,7 @@ function renderBlock(block, selectedDiv) {
     blockNameContainer.className = 'block-name-container'
     const blockNameSpan = document.createElement('span')
     blockNameSpan.className = 'block-name-span'
-    const blockName = document.createElement('h3')
+    const blockName = document.createElement('h4')
     blockName.textContent = block.name
     blockNameSpan.appendChild(blockName)
     blockNameContainer.appendChild(blockNameSpan)
@@ -606,7 +607,7 @@ let editingMode = false
 viewCard.addEventListener('click', async function(event) {
     // event.stopPropagation()
     // editing mode button
-    if (event.target.matches('button#editing-mode-button')) {
+    if (event.target.matches('input[type="checkbox"]')) {
         const editModeButton = event.target
         // to turn on editing mode
         if (editModeButton.className === 'mode-off') {
@@ -621,7 +622,7 @@ viewCard.addEventListener('click', async function(event) {
     } else if (event.target.matches('button#begin-workout-button')) {
         const workoutModeButton = event.target
 
-        const editingModeButton = viewCard.querySelector('button#editing-mode-button')
+        const editingModeButton = viewCard.querySelector('input[type="checkbox"]')
         if (editingModeButton.className === "mode-on") { toggleEditingMode("off") }
 
         if (workoutModeButton.className === 'mode-off') {
@@ -989,11 +990,13 @@ viewCard.addEventListener('click', async function(event) {
 })
 
 function toggleEditingMode(mode) {
-    const editModeButton = viewCard.querySelector('button#editing-mode-button')
+    const editModeButton = viewCard.querySelector('input[type="checkbox"]')
     const allEditingButtonSpans = viewCard.querySelectorAll('span.editing-mode-buttons')
     const allDeleteBlockButtons = viewCard.querySelectorAll('button.delete-block-button')
     const deleteWorkoutButton = viewCard.querySelector('button#delete-workout-button')
     if (mode === "on") {
+        toggleWorkoutMode("off")
+
         allEditingButtonSpans.forEach(span => span.style.display = '')
         allDeleteBlockButtons.forEach(button => button.style.display = '')
         editModeButton.className = 'mode-on'
@@ -1004,7 +1007,8 @@ function toggleEditingMode(mode) {
         allDeleteBlockButtons.forEach(button => button.style.display = 'none')
         deleteWorkoutButton.style.display = 'none'
         editModeButton.className = 'mode-off'
-        editModeButton.textContent = 'Enter Editing Mode'
+        editModeButton.checked = false
+        // editModeButton.textContent = 'Enter Editing Mode'
 
         // unhighlight any highlighted divs
         const allSets = Array.from(viewCard.querySelectorAll('div.one-set'))
@@ -1098,7 +1102,7 @@ function displayExerciseInfo(firstSet, htmlElement) {
 
         const activeTimerDiv = exerciseDisplayDiv.querySelector('div#active-timer-div')
         activeTimerDiv.style.display = ''
-        const activeTimerDisplay = activeTimerDiv.querySelector('div#active-timer')
+        const activeTimerDisplay = activeTimerDiv.querySelector('span#active-timer')
         const display = new Date(firstSet.active_time * 1000).toISOString().substr(11, 8)
         activeTimerDisplay.textContent = display
 
@@ -1137,7 +1141,7 @@ function displayExerciseInfo(firstSet, htmlElement) {
 
         const restTimerDiv = exerciseDisplayDiv.querySelector('div#rest-timer-div')
         restTimerDiv.style.display = ''
-        const restTimerDisplay = restTimerDiv.querySelector('div#rest-timer')
+        const restTimerDisplay = restTimerDiv.querySelector('span#rest-timer')
         const display = new Date(firstSet.rest_time * 1000).toISOString().substr(11, 8)
         restTimerDisplay.textContent = display
 

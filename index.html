@@ -11,7 +11,7 @@
         <div class="workout-display">
 
         </div>
-        <div class="workout-view">
+        <div class="workout-view" style="display: none;">
             <div class="view-card">
                 <div class="button-flex-end">
                     <!-- should this be "Close" instead? -->
@@ -24,10 +24,15 @@
                 <div id="display-container" class="row">
                     <div id="workout-info-side" class="column">
                         <div class="button-flex-end">
-                            <button id="editing-mode-button" class="mode-off">Enter Editing Mode</button>
+                            <p style="margin-right: 1em;">Toggle Editing Mode</p>
+                            <label class="switch">
+                                <input id="editing-mode-switch" type="checkbox" class="mode-off">
+                                <span class="slider round"></span>
+                              </label>
+                            <!-- <button id="editing-mode-button" class="mode-off">Enter Editing Mode</button> -->
                         </div>
                         <div id="delete-workout-button-container" class="button-flex-end">
-                            <button id="delete-workout-button">Delete Workout</button>
+                            <button id="delete-workout-button" style="display: none;">Delete Workout</button>
                         </div>
                         <div id="block-set-container">
 
@@ -37,7 +42,7 @@
                         <!-- display delete icon btn next to each block-->
                     </div>
                     <div id="exercise-info-side" class="column">
-                        <div class="edit-set-form">
+                        <div class="edit-set-form" style="display: none;">
                             <form class="update-set-form-block">
                                 <p>NOTE: Changes will be applied to all duplicated Blocks</p>
                                 <label>Exercise:</label>
@@ -62,7 +67,7 @@
                                 <button class="cancel-edit-button">Cancel/Exit</button>
                             </form>
                         </div>
-                        <div class="exercise-display">
+                        <div class="exercise-display" style="display: none;">
                             <h3 id="exercise-display-block-name">Block Name</h3>
                             <h1 id="exercise-display-exercise-name">Exercise Name</h1>
                             <h2 id="exercise-display-reps"># Repetitions</h2>
@@ -73,19 +78,27 @@
                             <div id="timers">
                                 <div id="active-timer-div" style="display: none;">
                                     <br>
-                                    <h5>Active Timer</h5>
-                                    <div id="active-timer"></div>
-                                    <button id="start-active-timer-button" class="start-timer">Start</button>
-                                    <button id="pause-active-timer-button">Pause</button>
-                                    <button id="reset-active-timer-button">Reset</button>
+                                    <h4>Active Timer</h4>
+                                    <div class="timer-contents">
+                                        <span id="active-timer"></span>
+                                        <span>
+                                            <button id="start-active-timer-button" class="start-timer">Start</button>
+                                            <button id="pause-active-timer-button">Pause</button>
+                                            <button id="reset-active-timer-button">Reset</button>
+                                        </span>
+                                    </div>
                                 </div>
                                 <div id="rest-timer-div" style="display: none;">
                                     <br>
-                                    <h5>Rest Timer</h5>
-                                    <div id="rest-timer"></div>
-                                    <button id="start-rest-timer-button" class="start-timer">Start</button>
-                                    <button id="pause-rest-timer-button">Pause</button>
-                                    <button id="reset-rest-timer-button">Reset</button>
+                                    <h4>Rest Timer</h4>
+                                    <div class="timer-contents">
+                                        <span id="rest-timer"></span>
+                                        <span>
+                                            <button id="start-rest-timer-button" class="start-timer">Start</button>
+                                            <button id="pause-rest-timer-button">Pause</button>
+                                            <button id="reset-rest-timer-button">Reset</button>
+                                        </span>
+                                    </div>
                                 </div>
                             </div>
                             <div id="next-set-button" class="button-flex-end">
@@ -95,9 +108,8 @@
                     </div>
                 </div>
             </div>
-        </div>
-        <br>
-        <div>
+        </div><br>
+        <div class="create-workout-form-div">
             <form class="create-workout-form">
                 <h3>Create New Workout</h3>
                 <label>Workout name:</label>
@@ -115,7 +127,7 @@
                 <select name="workout_id" class="block-exercise-select">
                     <option value="" selected disabled>Please select</option>
                 </select>
-                <div class="set-form-container" style="background-color: lightgray;">
+                <div class="set-form-container">
                     <h4>Add sets</h4>
                     <div class="set-form-block">
                         <label>Exercise:</label>
