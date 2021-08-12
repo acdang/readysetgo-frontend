@@ -121,12 +121,18 @@
         <div class="row">
             <form class="create-block-set-form column">
                 <h3>Create New Block</h3>
-                <label>Block name:</label>
-                <input type="text" name="name" id="block-name" placeholder="Custom name (opt.)" class=""><br>
-                <label>Add block to workout:</label>
-                <select name="workout_id" class="block-exercise-select">
-                    <option value="" selected disabled>Please select</option>
-                </select>
+                <div class="row">
+                    <div class="column" style="width: 50%;">
+                        <label>Block name:</label>
+                        <input type="text" name="name" id="block-name" placeholder="Custom name (opt.)" class="">
+                    </div>
+                    <div class="column" style="width: 50%;">
+                        <label>Add block to workout:</label>
+                        <select name="workout_id" class="block-exercise-select">
+                            <option value="" selected disabled>Please select</option>
+                        </select>
+                    </div>
+                </div>
                 <div class="set-form-container">
                     <h4>Add sets</h4>
                     <div class="set-form-block">
@@ -137,12 +143,18 @@
                         </select><br>
                         <!-- <input type="text" name="exercise_id" class="set-exercise" placeholder="Select Exercise" disabled><br> -->
                         <label>Set repetitions:</label>
-                        <input type="number" name="set_reps" class="set-reps" value="1" min="1"><br><br>
-                        <label>Exercise repetitions:</label>
-                        <input type="number" name="exercise_rep_num" class="exercise_rep_num" ><br>
-                        or<br>
-                        <label>Active time (in seconds):</label>
-                        <input type="number" name="active_time" class="set-active-time" ><br><br>
+                        <input type="number" name="set_reps" class="set-reps" value="1" min="1"><br>
+                        <div class="row">
+                            <div class="column" style="width: 50%;">
+                                <label>Exercise repetitions:</label>
+                                <input type="number" name="exercise_rep_num" class="exercise_rep_num">
+                            </div>
+                            <div class="column" style="width: 50%;">
+                                <label>Active time (in seconds):</label>
+                                <input type="number" name="active_time" class="set-active-time">
+                            </div>
+                        </div>
+                        
                         <label>Rest time (in seconds):</label>
                         <input type="number" name="rest_time" class="set-rest-time" ><br>
                         <label>Weight (in lbs):</label>
@@ -153,27 +165,30 @@
                 <br><br>
                 <input type="submit" name="submit" value="Create New Block" class="">
             </form>
-            <form class="add-existing-block-form column">
-                <small>WARNING! This feature is not completely finalized and may mess up the order of your Workout blocks</small>
-                <h3>Add Existing Block to Workout</h3>
-                <label>Select a Block from ...</label><br>
-                <select name="workout_id" class="select-workout">
-                    <option value="" selected disabled>Select a Workout</option>
-                </select><br><br>
-                <select name="block_id" class="select-block" style="display: none;">
-                    <option value="" selected disabled>Select a Block to add</option>
-                </select>
-                <div class="mini-display">
-
-                </div><br>
-                <div class="select-workout-to-add-to" style="display: none;">
-                    <label>Add this Block to ...</label><br>
-                    <select name="destination" class="select-workout">
+            <div class="add-existing-block-div">
+                <form class="add-existing-block-form column">
+                    <small style="color: gray;">WARNING! This feature is not completely finalized and may mess up the order of your Workout blocks</small>
+                    <h3>Add Existing Block to Workout</h3>
+                    <label>Select a Block from ...</label><br>
+                    <select name="workout_id" class="select-workout">
                         <option value="" selected disabled>Select a Workout</option>
+                    </select><br><br>
+                    <select name="block_id" class="select-block" style="display: none;">
+                        <option value="" selected disabled>Select a Block to add</option>
                     </select>
-                </div><br><br>
-                <input type="submit" name="submit" value="Add Block" class="submit-button" style="display: none;">
-            </form>
+                    <div class="mini-display">
+
+                    </div><br>
+                    <div class="select-workout-to-add-to" style="display: none;">
+                        <label>Add this Block to ...</label><br>
+                        <select name="destination" class="select-workout">
+                            <option value="" selected disabled>Select a Workout</option>
+                        </select>
+                    </div><br><br>
+                    <input type="submit" name="submit" value="Add Block" class="submit-button" style="display: none;">
+                </form>
+            </div>
+            
         </div>
     </body>
 </html>

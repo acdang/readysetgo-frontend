@@ -58,9 +58,9 @@ body {
 }
 
 .set-form-container {
-    background-color: #EFEFEF;
+    /* background-color: #EFEFEF; */
     padding: 1em;
-    margin-top: 1em;
+    /* margin-top: 1em; */
 }
 
 .set-form-block {
@@ -68,10 +68,10 @@ body {
     padding-top: 1em;
 }
 
-.add-existing-block-form {
+.add-existing-block-div {
     background-color: white;
     border-radius: 20px;
-    padding: 1.5rem;
+    padding: 1em;
     margin: 1em;
 }
 
@@ -133,7 +133,7 @@ body {
 }
 
 .add-existing-block-form {
-    width: 50%;
+    width: 100%;
 }
 
 .create-block-set-form {
@@ -159,7 +159,13 @@ button {
     cursor: pointer;
 }
 input[type=submit] {
+    background-color: black;
     cursor: pointer;
+    color:white;
+    border: none;
+    border-radius: 5px;
+    padding: 0.7em;
+    margin-top: 0.5em;
 }
 .view-workout-button {
     background-color: black;
@@ -260,6 +266,21 @@ div#next-set-button > button {
     border: none;
     border-radius: 5px;
     margin-top: 2em;
+}
+
+/* INPUT FIELDS */
+input[type=number], input[type=text], select {
+    padding: 0.75em;
+    margin: 0.5em;
+    background-color: #F5F5F5;
+    border: none;
+    border-radius: 10px;
+    display: block;
+
+    width: 40%;
+}
+div.column > input, div.column > select {
+    width:100%;
 }
 
 /* TIMERS */
