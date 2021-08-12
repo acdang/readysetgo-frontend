@@ -54,9 +54,54 @@ fetchWorkouts().then(function(workoutsArray) {
     workoutNameInput.placeholder = `Workout ${workoutsArray.length + 1}`
 })
 
-// on form submit, assigns default placeholder as name value for new Workout (if no user-provided name)
-function autoWorkoutNameValue(input) {
-    input.value = input.placeholder
+// on page load, render all available Workout options in Block/ExerciseSet form
+// add workout options to select input in Block/ExerciseSet form
+fetchWorkouts().then(function(workoutsArray) {
+    workoutsArray.forEach(function(workoutObj) {
+        createWorkoutOption(workoutObj)
+    })
+})
+
+// add option tag to select Workout input in Block/ExerciseSet form
+function createWorkoutOption(workoutObject) {
+    // create option
+    const newOption = document.createElement('option')
+    // assign name & id to option
+    newOption.value = workoutObject.id
+    // debugger
+    newOption.textContent = workoutObject.name
+    // append to create block form select input
+    blockWorkoutSelectInput.appendChild(newOption)
+    // append to select existing block form select input (workout to GET block from)
+    const copy = newOption.cloneNode(true)
+    workoutSelectExistingBlock.appendChild(copy)
+    // append to select existing block form select input (workout to ADD block to)
+    const copy2 = newOption.cloneNode(true)
+    const selectInput = divToSelectWorkoutToAddTo.querySelector('select')
+    selectInput.appendChild(copy2)
+    // debugger
+}
+
+// on page load, render all available Exercises in select input for create ExerciseSet
+// add exercise options to select input in ExerciseSet form
+fetchExercises().then(function(exercisesArray) {
+    exercisesArray.forEach(function(exerciseObj) {
+        createExerciseOption(exerciseObj)
+    })
+})
+
+// add option tag to select Exercise input in Block/ExerciseSet form
+function createExerciseOption(exerciseObject) {
+    // create option
+    const newOption = document.createElement('option')
+    // assign name & id to option
+    newOption.value = exerciseObject.id
+    newOption.textContent = exerciseObject.name
+    // append to select input
+    exerciseSetExerciseSelectInput.appendChild(newOption)
+    const forUpdateForm = newOption.cloneNode(true)
+    updateExerciseSelectInput.appendChild(forUpdateForm)
+    // debugger
 }
 
 // render text for ExerciseSet detail divs
@@ -102,6 +147,11 @@ workoutForm.addEventListener('submit', async function(event) {
 
     event.target.reset() // form reset
 })
+
+// on form submit, assigns default placeholder as name value for new Workout (if no user-provided name)
+function autoWorkoutNameValue(input) {
+    input.value = input.placeholder
+}
 
 // submission handling on create new Block & ExerciseSet(s) form
 blockExerciseSetForm.addEventListener('submit', async function(event) {
@@ -283,7 +333,7 @@ selectExistingBlockForm.addEventListener('submit', function(event) {
     event.target.reset()
 })
 
-// add new ExerciseSet input field blocks in the Block/ExerciseSet form
+// when this button is clicked, add new ExerciseSet input field blocks in the Block/ExerciseSet form
 addExerciseSetButton.addEventListener('click', function() {
     const newSetFormBlock = exerciseSetFormBlock.cloneNode(true)
 
@@ -296,35 +346,7 @@ addExerciseSetButton.addEventListener('click', function() {
     exerciseSetFormContainer.append(lineBreak, newSetFormBlock)
 })
 
-// add option tag to select Workout input in Block/ExerciseSet form
-function createWorkoutOption(workoutObject) {
-    // create option
-    const newOption = document.createElement('option')
-    // assign name & id to option
-    newOption.value = workoutObject.id
-    // debugger
-    newOption.textContent = workoutObject.name
-    // append to create block form select input
-    blockWorkoutSelectInput.appendChild(newOption)
-    // append to select existing block form select input (workout to GET block from)
-    const copy = newOption.cloneNode(true)
-    workoutSelectExistingBlock.appendChild(copy)
-    // append to select existing block form select input (workout to ADD block to)
-    const copy2 = newOption.cloneNode(true)
-    const selectInput = divToSelectWorkoutToAddTo.querySelector('select')
-    selectInput.appendChild(copy2)
-    // debugger
-}
-
-// on page load, render all available Workout options in Block/ExerciseSet form
-// add workout options to select input in Block/ExerciseSet form
-fetchWorkouts().then(function(workoutsArray) {
-    workoutsArray.forEach(function(workoutObj) {
-        createWorkoutOption(workoutObj)
-    })
-})
-
-// create a new ExerciseSet & render ExerciseSet details in Workout display card
+// create a given number of ExerciseSets & render ExerciseSet details in Workout display card
 async function createExerciseSet(objectsArray, blockId, exerciseSetDisplayList) {
     
     // into body, passing in a hash that contains a hash with a key pointing to an array of hashes
@@ -357,6 +379,7 @@ function createWorkoutBlock(blockId, workoutId) {
     })
 }
 
+// create a Block
 async function createBlock(selectedWorkoutId, blockNameInput) {
     let blockName
     const workoutObj = await fetchWorkoutById(selectedWorkoutId)
@@ -380,6 +403,7 @@ async function createBlock(selectedWorkoutId, blockNameInput) {
     return data
 }
 
+// create a given number of SetReptitions
 async function createSetRepetitions(setRepetitionObjectsArray) {
     fetch('http://127.0.0.1:3000/set_repetitions', {
         method: 'POST',
@@ -389,30 +413,6 @@ async function createSetRepetitions(setRepetitionObjectsArray) {
         },
         body: JSON.stringify({ set_repetition: { object_array: setRepetitionObjectsArray } })
     })
-}
-
-// !!! can prob combine this with renderWorkoutOptions() ?
-// on page load, render all available Exercises in select input for create ExerciseSet
-// add exercise options to select input in ExerciseSet form
-fetchExercises().then(function(exercisesArray) {
-    exercisesArray.forEach(function(exerciseObj) {
-        createExerciseOption(exerciseObj)
-    })
-})
-
-// !!! can prob combine this with createWorkoutOption() ?
-// add option tag to select Exercise input in Block/ExerciseSet form
-function createExerciseOption(exerciseObject) {
-    // create option
-    const newOption = document.createElement('option')
-    // assign name & id to option
-    newOption.value = exerciseObject.id
-    newOption.textContent = exerciseObject.name
-    // append to select input
-    exerciseSetExerciseSelectInput.appendChild(newOption)
-    const forUpdateForm = newOption.cloneNode(true)
-    updateExerciseSelectInput.appendChild(forUpdateForm)
-    // debugger
 }
 
 // render a Workout display card for a given Workout
@@ -1061,25 +1061,25 @@ async function toggleWorkoutMode(mode) {
 const restTimer = new easytimer.Timer()
 const activeTimer = new easytimer.Timer()
 
-restTimer.addEventListener('secondsUpdated', function(event) {
-    document.querySelector('#rest-timer').textContent = restTimer.getTimeValues().toString()
-})
-restTimer.addEventListener('started', function (e) {
-    document.querySelector('#rest-timer').textContent = restTimer.getTimeValues().toString()
-});
-restTimer.addEventListener('reset', function (e) {
-    document.querySelector('#rest-timer').textContent = restTimer.getTimeValues().toString()
-});
+// restTimer.addEventListener('secondsUpdated', function(event) {
+//     document.querySelector('#rest-timer').textContent = restTimer.getTimeValues().toString()
+// })
+// restTimer.addEventListener('started', function (e) {
+//     document.querySelector('#rest-timer').textContent = restTimer.getTimeValues().toString()
+// });
+// restTimer.addEventListener('reset', function (e) {
+//     document.querySelector('#rest-timer').textContent = restTimer.getTimeValues().toString()
+// });
 
-activeTimer.addEventListener('secondsUpdated', function(event) {
-    document.querySelector('#active-timer').textContent = activeTimer.getTimeValues().toString()
-})
-activeTimer.addEventListener('started', function (e) {
-    document.querySelector('#active-timer').textContent = activeTimer.getTimeValues().toString()
-});
-activeTimer.addEventListener('reset', function (e) {
-    document.querySelector('#active-timer').textContent = activeTimer.getTimeValues().toString()
-});
+// activeTimer.addEventListener('secondsUpdated', function(event) {
+//     document.querySelector('#active-timer').textContent = activeTimer.getTimeValues().toString()
+// })
+// activeTimer.addEventListener('started', function (e) {
+//     document.querySelector('#active-timer').textContent = activeTimer.getTimeValues().toString()
+// });
+// activeTimer.addEventListener('reset', function (e) {
+//     document.querySelector('#active-timer').textContent = activeTimer.getTimeValues().toString()
+// });
 
 function displayExerciseInfo(firstSet, htmlElement) {
     // highlight the div
@@ -1115,25 +1115,26 @@ function displayExerciseInfo(firstSet, htmlElement) {
         activeTimerDisplay.textContent = display
 
         const activeTimerButton = activeTimerDiv.querySelector('button#start-active-timer-button')
-        activeTimerButton.addEventListener('click', function(event) {
-            const button = event.target
-            if (button.className === 'start-timer') {
-                activeTimer.start({countdown: true, startValues: {seconds: firstSet.active_time}});
-                activeTimerDisplay.textContent = activeTimer.getTimeValues().toString()
+        handlingTimerButtons(firstSet.active_time, activeTimer, activeTimerButton, activeTimerDisplay, activeTimerDiv, '#active-timer')
+        // activeTimerButton.addEventListener('click', function(event) {
+        //     const button = event.target
+        //     if (button.className === 'start-timer') {
+        //         activeTimer.start({countdown: true, startValues: {seconds: firstSet.active_time}});
+        //         activeTimerDisplay.textContent = activeTimer.getTimeValues().toString()
 
-                // button.textContent = "Pause"
-                // button.className = 'pause-timer'
-            }
-        })
-        const resetButton = activeTimerDiv.querySelector('button#reset-active-timer-button')
-        resetButton.addEventListener('click', function(event) {
-            activeTimer.reset()
-            activeTimer.stop()
-        })
-        const pauseButton = activeTimerDiv.querySelector('button#pause-active-timer-button')
-        pauseButton.addEventListener('click', function(event) {
-            activeTimer.pause()
-        })
+        //         // button.textContent = "Pause"
+        //         // button.className = 'pause-timer'
+        //     }
+        // })
+        // const resetButton = activeTimerDiv.querySelector('button#reset-active-timer-button')
+        // resetButton.addEventListener('click', function(event) {
+        //     activeTimer.reset()
+        //     activeTimer.stop()
+        // })
+        // const pauseButton = activeTimerDiv.querySelector('button#pause-active-timer-button')
+        // pauseButton.addEventListener('click', function(event) {
+        //     activeTimer.pause()
+        // })
     } else {
         activeTime.style.display = 'none'
     }
@@ -1154,25 +1155,23 @@ function displayExerciseInfo(firstSet, htmlElement) {
         restTimerDisplay.textContent = display
 
         const restTimerButton = restTimerDiv.querySelector('button#start-rest-timer-button')
-        restTimerButton.addEventListener('click', function(event) {
-            const button = event.target
-            if (button.className === 'start-timer') {
-                restTimer.start({countdown: true, startValues: {seconds: firstSet.rest_time}});
-                restTimerDisplay.textContent = restTimer.getTimeValues().toString()
-
-                // button.textContent = "Pause"
-                // button.className = 'pause-timer'
-            }
-        })
-        const resetButton = restTimerDiv.querySelector('button#reset-rest-timer-button')
-        resetButton.addEventListener('click', function(event) {
-            restTimer.reset()
-            restTimer.stop()
-        })
-        const pauseButton = restTimerDiv.querySelector('button#pause-rest-timer-button')
-        pauseButton.addEventListener('click', function(event) {
-            restTimer.pause()
-        })
+        handlingTimerButtons(firstSet.rest_time, restTimer, restTimerButton, restTimerDisplay, restTimerDiv, '#rest-timer')
+        // restTimerButton.addEventListener('click', function(event) {
+        //     const button = event.target
+        //     if (button.className === 'start-timer') {
+        //         restTimer.start({countdown: true, startValues: {seconds: firstSet.rest_time}});
+        //         restTimerDisplay.textContent = restTimer.getTimeValues().toString()
+        //     }
+        // })
+        // const resetButton = restTimerDiv.querySelector('button#reset-rest-timer-button')
+        // resetButton.addEventListener('click', function(event) {
+        //     restTimer.reset()
+        //     restTimer.stop()
+        // })
+        // const pauseButton = restTimerDiv.querySelector('button#pause-rest-timer-button')
+        // pauseButton.addEventListener('click', function(event) {
+        //     restTimer.pause()
+        // })
     }
     // link display
     const refLink = exerciseDisplayDiv.querySelector('a#exercise-display-link')
@@ -1181,15 +1180,41 @@ function displayExerciseInfo(firstSet, htmlElement) {
     } else {
         refLink.style.display = 'none'
     }
-
-    // next button handling
-    // const nextButton = exerciseDisplayDiv.querySelector('div#next-set-button button')
-    // nextButton.addEventListener('click', () => handleNextSet())
 }
 
+// button handling for start, pause, reset timer
+function handlingTimerButtons(startTime, timer, button, timerDisplay, timerDiv, htmlId) {
+    button.addEventListener('click', function(event) {
+        const button = event.target
+        if (button.className === 'start-timer') {
+            timer.start({countdown: true, startValues: {seconds: startTime}});
+            timerDisplay.textContent = timer.getTimeValues().toString()
+        }
+    })
+    const resetButton = timerDiv.querySelector('button.reset-timer')
+    resetButton.addEventListener('click', function(event) {
+        timer.reset()
+        timer.stop()
+    })
+    const pauseButton = timerDiv.querySelector('button.pause-timer')
+    pauseButton.addEventListener('click', function(event) {
+        timer.pause()
+    })
+
+    timer.addEventListener('secondsUpdated', function(event) {
+        document.querySelector(htmlId).textContent = timer.getTimeValues().toString()
+    })
+    timer.addEventListener('started', function (event) {
+        document.querySelector(htmlId).textContent = timer.getTimeValues().toString()
+    });
+    timer.addEventListener('reset', function (event) {
+        document.querySelector(htmlId).textContent = timer.getTimeValues().toString()
+    });
+}
+
+// display the next set in the Workout (when user is going through the workout with the "Next Set" button)
 const nextButton = exerciseDisplayDiv.querySelector('div#next-set-button button')
 nextButton.addEventListener('click', (event) => handleNextSet(event))
-
 async function handleNextSet(event) {
     event.stopPropagation()
     // console.log('clicked')
@@ -1208,6 +1233,7 @@ async function handleNextSet(event) {
     displayExerciseInfo(nowViewingSetObj, nowViewingSet)
 }
 
+// when edit form is opened, disable other edit buttons
 function handleEditButtons(editing) {
     if (editing) {
        let buttons = document.querySelectorAll('button.edit-set-button')
