@@ -1,13 +1,17 @@
 <html>
     <head>
         <title>ReadySETGo</title>
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600&display=swap" rel="stylesheet">
         <link rel="stylesheet" type="text/css" href="style.css">
         <script src="src/index.js" defer></script>
-        <!-- <script src="https://cdn.jsdelivr.net/npm/easytimer@1.1.1/src/easytimer.min.js"></script> -->
         <script src="https://cdn.jsdelivr.net/npm/easytimer.js@4.4.0/dist/easytimer.min.js"></script>
-        <!-- <script src="timer.js"></script> -->
     </head>
     <body>
+        <div class="topnav">
+            <h4>ReadySETGo</h4>
+          </div>
         <div class="workout-display">
 
         </div>
@@ -143,7 +147,7 @@
                         </select><br>
                         <!-- <input type="text" name="exercise_id" class="set-exercise" placeholder="Select Exercise" disabled><br> -->
                         <label>Set repetitions:</label>
-                        <input type="number" name="set_reps" class="set-reps" value="1" min="1"><br>
+                        <input type="number" name="set_reps" class="set-reps" value="1" min="1">
                         <div class="row">
                             <div class="column" style="width: 50%;">
                                 <label>Exercise repetitions:</label>
@@ -156,23 +160,22 @@
                         </div>
                         
                         <label>Rest time (in seconds):</label>
-                        <input type="number" name="rest_time" class="set-rest-time" ><br>
+                        <input type="number" name="rest_time" class="set-rest-time" >
                         <label>Weight (in lbs):</label>
                         <input type="number" name="weight" class="set-weight" >
                     </div>
                 </div>
-                <br><button type="button" id="add-set">Add another set</button>
-                <br><br>
+                <button type="button" id="add-set">Add another set</button>
                 <input type="submit" name="submit" value="Create New Block" class="">
             </form>
             <div class="add-existing-block-div">
                 <form class="add-existing-block-form column">
-                    <small style="color: gray;">WARNING! This feature is not completely finalized and may mess up the order of your Workout blocks</small>
+                    <small style="color: gray;">WARNING! This feature is not completely finalized & may scramble order of your Workout blocks</small>
                     <h3>Add Existing Block to Workout</h3>
                     <label>Select a Block from ...</label><br>
                     <select name="workout_id" class="select-workout">
                         <option value="" selected disabled>Select a Workout</option>
-                    </select><br><br>
+                    </select>
                     <select name="block_id" class="select-block" style="display: none;">
                         <option value="" selected disabled>Select a Block to add</option>
                     </select>
