@@ -493,20 +493,18 @@ function renderBlock(block, selectedDiv) {
     if (exerciseSetsArray.length !== 0) {
         exerciseSetsArray.forEach(function(exerciseSet, index, array) { // need to have `has_one :exercise` in ExerciseSet serializer
             // debugger
-            // renderSet(exerciseSet, exerciseSetsDisplay)
 
             let isFirstRepetition = false
             if (selectedDiv === blockSetContainer) {
-                // if (index !== (exerciseSetsArray.length - 1)) {
                     // console.log(index)
-                    if (index === 0 || exerciseSet.id !== exerciseSetsArray[index - 1].id) { // buttons to only first displayblock of repeating sets
-                        // console.log(exerciseSet.id)
-                        isFirstRepetition = true
-                    }             
-                // }
+
+                // assign editing buttons only to the first Set display of a group of the same Set displays
+                if (index === 0 || exerciseSet.id !== exerciseSetsArray[index - 1].id) {
+                    // console.log(exerciseSet.id)
+                    isFirstRepetition = true
+                }             
             }
             renderSet(exerciseSet, exerciseSetsDisplay, isFirstRepetition)
-            // renderSet(newExerciseSets[i], exerciseSetDisplayListViewCard, isFirstRepetition)
         })
     }
     blockDiv.append(blockNameContainer, exerciseSetsDisplay)
@@ -522,6 +520,7 @@ function renderSet(exerciseSet, exerciseSetsDisplay, isFirstDisplay) {
     const infoSpan = document.createElement('span')
     infoSpan.className = 'set-info'
 
+    // text content
     if (exerciseSet.exercise_rep_num) {
         infoSpan.textContent = exerciseSetDetailsLine(true, exerciseSet.exercise.name, exerciseSet.exercise_rep_num)
     } else {
@@ -529,6 +528,7 @@ function renderSet(exerciseSet, exerciseSetsDisplay, isFirstDisplay) {
     }
     oneSetDisplay.appendChild(infoSpan)
 
+    // if the display is the first one a group of the same displays, add the editing mode buttons
     if (arguments[2] && isFirstDisplay === true) {
         const buttonSpan = document.createElement('span')
         buttonSpan.className = 'editing-mode-buttons'
@@ -559,7 +559,8 @@ fetchWorkouts().then(function(workoutsArray) {
 
 // clicking on "View Workout" button on a Workout display card shows the specific Workout info card below
 workoutDisplay.addEventListener('click', async function(event) {
-    if (event.target.matches('button')) { // likely need to specify what this button is with class name
+    // when user clicks "View Workout" button from a display card
+    if (event.target.matches('button')) {
         toggleEditingMode("off")
         toggleWorkoutMode("off")
         // clear contents
@@ -579,8 +580,6 @@ workoutDisplay.addEventListener('click', async function(event) {
         const viewWorkoutName = viewCard.querySelector('h2#specific-workout-name')
         viewWorkoutName.textContent = workoutObject.name
         
-        // const editButton = viewCard.querySelector('button#editing-mode-button')
-        // editButton.className = 'mode-off'
         // display Blocks and ExerciseSets on left side
         const blocksArray = workoutObject.blocks // need to have `has_many :blocks` in Workout serializer
         // debugger
