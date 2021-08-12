@@ -58,14 +58,13 @@
                                 <label>Set repetitions:</label>
                                 <input type="number" name="set_reps" class="set-reps" min="1"><br><br>
                                 <label>Exercise repetitions:</label>
-                                <input type="number" name="exercise_rep_num" class="exercise_rep_num" ><br>
-                                or<br>
+                                <input type="number" name="exercise_rep_num" class="exercise-rep-num" min="1"><br>
                                 <label>Active time (in seconds):</label>
                                 <input type="number" name="active_time" class="set-active-time" ><br><br>
                                 <label>Rest time (in seconds):</label>
-                                <input type="number" name="rest_time" class="set-rest-time" ><br>
+                                <input type="number" name="rest_time" class="set-rest-time" placeholder="Leave empty if none" min="1"><br>
                                 <label>Weight (in lbs):</label>
-                                <input type="number" name="weight" class="set-weight" ><br><br>
+                                <input type="number" name="weight" class="set-weight" placeholder="Leave empty if none" min="1"><br><br>
                                 <input type="submit" name="submit" value="Update Set" class="">
                                 <br><br>
                                 <button class="cancel-edit-button">Cancel/Exit</button>
@@ -147,26 +146,27 @@
                         </select><br>
                         <!-- <input type="text" name="exercise_id" class="set-exercise" placeholder="Select Exercise" disabled><br> -->
                         <label>Set repetitions:</label>
-                        <input type="number" name="set_reps" class="set-reps" value="1" min="1">
+                        <input type="number" name="set_reps" class="set-reps" value="1" min="1"><br>
+                        Select one:
                         <div class="row">
                             <div class="column" style="width: 50%;">
                                 <label>Exercise repetitions:</label>
-                                <input type="number" name="exercise_rep_num" class="exercise_rep_num">
+                                <input type="number" name="exercise_rep_num" class="exercise-rep-num" min="1">
                             </div>
                             <div class="column" style="width: 50%;">
                                 <label>Active time (in seconds):</label>
-                                <input type="number" name="active_time" class="set-active-time">
+                                <input type="number" name="active_time" class="set-active-time" min="1">
                             </div>
                         </div>
                         
                         <label>Rest time (in seconds):</label>
-                        <input type="number" name="rest_time" class="set-rest-time" >
+                        <input type="number" name="rest_time" class="set-rest-time" placeholder="Leave empty if none" min="1">
                         <label>Weight (in lbs):</label>
-                        <input type="number" name="weight" class="set-weight" >
+                        <input type="number" name="weight" class="set-weight" placeholder="Leave empty if none" min="1">
                     </div>
                 </div>
                 <button type="button" id="add-set">Add another set</button>
-                <input type="submit" name="submit" value="Create New Block" class="">
+                <input type="submit" name="submit" value="Create New Block" class="create-block-button">
             </form>
             <div class="add-existing-block-div">
                 <form class="add-existing-block-form column">

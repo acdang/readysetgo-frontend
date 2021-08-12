@@ -161,7 +161,7 @@ body {
 }
 
 .currently-editing {
-    background-color: lightyellow;
+    background-color: #bfe4d4;
 }
 
 /* BUTTONS */
@@ -301,6 +301,9 @@ input[type=number], input[type=text], select {
 }
 div.column > input, div.column > select {
     width:100%;
+}
+form.update-set-form-block > input, form.update-set-form-block > select {
+    width: 100%;
 }
 
 /* TIMERS */

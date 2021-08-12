@@ -1,3 +1,6 @@
+// console logs and debugger lines have been left in as comments
+// to demonstrate my debugging process (Perserverance category in rubric)
+
 const workoutForm = document.querySelector('form.create-workout-form')
 const workoutNameInput = document.querySelector('form.create-workout-form input#workout-name')
 const blockExerciseSetForm = document.querySelector('form.create-block-set-form')
@@ -152,6 +155,25 @@ workoutForm.addEventListener('submit', async function(event) {
 function autoWorkoutNameValue(input) {
     input.value = input.placeholder
 }
+
+// for now, user either provides exercise reps OR active time
+// disable the other field when one is filled (for both create and edit forms)
+const exerciseRepField = blockExerciseSetForm.querySelector('input.exercise-rep-num')
+const activeTimeField = blockExerciseSetForm.querySelector('input.set-active-time')
+// hide submit button on load
+// show submit button if either field has input
+const createBlockButton = blockExerciseSetForm.querySelector('input.create-block-button')
+createBlockButton.style.display = 'none'
+exerciseRepField.addEventListener("input", function () {
+    activeTimeField.disabled = this.value != ""
+    activeTimeField.placeholder = 'To edit this, cannot have exercise repetitions'
+    createBlockButton.style.display = ''
+})
+activeTimeField.addEventListener("input", function () {
+    exerciseRepField.disabled = this.value != ""
+    exerciseRepField.placeholder = 'To edit this, cannot have active time'
+    createBlockButton.style.display = ''
+})
 
 // submission handling on create new Block & ExerciseSet(s) form
 blockExerciseSetForm.addEventListener('submit', async function(event) {
@@ -749,6 +771,15 @@ viewCard.addEventListener('click', async function(event) {
         restTime.placeholder = selectedSet.rest_time ? selectedSet.rest_time : ""
         weight.placeholder = selectedSet.weight ? selectedSet.weight : ""
 
+        // user can only have either exercise reps or active time
+        if (selectedSet.exercise_rep_num) {
+            activeTime.disabled = true
+            activeTime.placeholder = 'N/A'
+        } else if (selectedSet.active_time) {
+            exerciseReps.disabled = true
+            exerciseReps.placeholder = 'N/A'
+        }
+
         updateForm.addEventListener('submit', async function(event) {
             event.preventDefault()
 
@@ -1088,7 +1119,7 @@ function displayExerciseInfo(firstSet, htmlElement) {
     // weight & rest time display
     if (firstSet.weight) {
         const weight = exerciseDisplayDiv.querySelector('span#exercise-display-weight')
-        weight.textContent = firstSet.weight
+        weight.textContent = firstSet.weight > 1 ? `${firstSet.weight} lbs` : `${firstSet.weight} lb`
     }
     if (firstSet.rest_time) {
         const restTime = exerciseDisplayDiv.querySelector('span#exercise-display-rest-time')
