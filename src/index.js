@@ -59,6 +59,7 @@ function autoWorkoutNameValue(input) {
     input.value = input.placeholder
 }
 
+// render text for ExerciseSet detail divs
 function exerciseSetDetailsLine(hasRepetitions, exerciseName, exerciseRepetitionsOrActiveTime) {
     let singleOrPlural
     if (hasRepetitions) {
@@ -70,7 +71,7 @@ function exerciseSetDetailsLine(hasRepetitions, exerciseName, exerciseRepetition
     return `${exerciseName}, ${exerciseRepetitionsOrActiveTime} ${singleOrPlural}`
 }
 
-// submit handling on create new Workout form
+// submission handling on create new Workout form
 workoutForm.addEventListener('submit', async function(event) {
     event.preventDefault()
 
@@ -102,19 +103,119 @@ workoutForm.addEventListener('submit', async function(event) {
     event.target.reset() // form reset
 })
 
+// submission handling on create new Block & ExerciseSet(s) form
+blockExerciseSetForm.addEventListener('submit', async function(event) {
+    event.preventDefault()
+
+    // get array of all html input blocks that create new ExerciseSet
+    const allSetFormBlocks = Array.from(event.target.querySelectorAll('div.set-form-block'))
+    // for each html block in the array, extract input values into array
+    const inputValuesArray = allSetFormBlocks.map(function(setFormBlock) {
+        const selectInput = Number(setFormBlock.querySelector('select').value)
+        const inputsArray = Array.from(setFormBlock.querySelectorAll('input'))
+        const inputFields = inputsArray.map(inputElement => {
+            if (inputElement.value !== "") {
+                return Number(inputElement.value)
+            } else {
+                return null
+            }
+        })
+        // debugger
+        return [selectInput, ...inputFields]
+    })
+
+    // create ExerciseSet object for each element in array of inputvalue arrays
+    const exerciseSetObjectsArray = inputValuesArray.map(function(inputValues) {
+        const [ exerciseId, setReps, exerciseRepNum, activeTime, restTime, weight ] = inputValues
+        const exerciseSetObject = {
+            exercise_id: Number(exerciseId),
+            exercise_rep_num: exerciseRepNum,
+            active_time: activeTime,
+            rest_time: restTime,
+            weight: weight,
+        }
+        return exerciseSetObject
+    })
+    // debugger
+    
+    const [ blockNameInput, selectedWorkoutInput ] = event.target
+    const selectedWorkoutId = Number(selectedWorkoutInput.value)
+
+    const newBlock = await createBlock(selectedWorkoutId, blockNameInput)
+
+    createWorkoutBlock(newBlock.id, selectedWorkoutId)
+
+    // debugger
+
+    // render Block in the associated Workout display card
+    const workoutCardInfoContainer = document.querySelector(`div.card[data-id="${selectedWorkoutId}"] div.workout-info-top`)
+    renderBlock(newBlock, workoutCardInfoContainer)
+  
+    if (workoutViewContainer.style.display !== 'none' && workoutViewContainer.dataset.id == selectedWorkoutId) {
+        renderBlock(newBlock, blockSetContainer)
+    }
+    const exerciseSetDisplayList = workoutCardInfoContainer.querySelector(`div.exercise-set-display[data-id="${newBlock.id}"]`)
+    const exerciseSetDisplayListViewCard = workoutViewContainer.querySelector(`div.exercise-set-display[data-id="${newBlock.id}"]`)
+    // create all ExerciseSets in provided ExerciseSet objects array
+    const newExerciseSets = await createExerciseSet(exerciseSetObjectsArray)
+
+    // extract set repetition numbers from array of ExerciseSet inputs
+    const setRepArray = inputValuesArray.map(function(inputValues) {
+        const [ exerciseId, setReps, exerciseRepNum, activeTime, restTime, weight ] = inputValues
+    
+        return Number(setReps)
+    })
+
+    const setRepetitionObjectsArray = []
+    
+    // create SetRepetition objects
+    for (let i = 0; i < setRepArray.length; i++) {
+        for (let j = 0; j < setRepArray[i]; j++) {
+            const oneObject = {
+                block_id: newBlock.id,
+                exercise_set_id: newExerciseSets[i].id,
+            }
+            setRepetitionObjectsArray.push(oneObject)
+
+            renderSet(newExerciseSets[i], exerciseSetDisplayList)
+            if (workoutViewContainer.style.display !== 'none' && workoutViewContainer.dataset.id == selectedWorkoutId) {
+                // add Edit and Delete buttons
+                let isFirstRepetition = false
+                if (j === 0) { // buttons to only first displayblock of repeating sets
+                    isFirstRepetition = true
+                }
+
+                renderSet(newExerciseSets[i], exerciseSetDisplayListViewCard, isFirstRepetition)
+            }
+        }
+    }
+
+    // debugger
+    createSetRepetitions(setRepetitionObjectsArray)
+    // toggleEditingMode("off")
+    // debugger
+    event.target.reset() // form reset
+})
+
+// when user selects a Workout to select a Block from (in the Add Existing Block Form)
 const selectBlockInput = document.querySelector('form.add-existing-block-form select.select-block')
 workoutSelectExistingBlock.addEventListener('change', async function(event) {
-    // get all blocks of workout selected
+    // get all Blocks of Workout selected
     const selectedWorkout = await fetchWorkoutById(Number(event.target.value))
     const allBlocks = selectedWorkout.blocks
+
     // debugger
+
+    // data attribute of the select existing Block input is id of previously selected Workout
     selectBlockInput.dataset.id = Number(event.target.value)
-    selectBlockInput.style.display = ''
+    selectBlockInput.style.display = '' // display the element
    
+    // reset options if there are existing options
     while (selectBlockInput.querySelectorAll('option').length != 1) {
         selectBlockInput.lastChild.remove()
     }
 
+    // create select option for each Block in previously selected Workout
     allBlocks.forEach(block => {
         const newOption = document.createElement('option')
         newOption.value = block.id
@@ -122,6 +223,8 @@ workoutSelectExistingBlock.addEventListener('change', async function(event) {
         selectBlockInput.appendChild(newOption)
     })
 })
+
+// when a user selects an option from the Select Existing Block input, preview that block in mini display
 const miniDisplay = selectExistingBlockForm.querySelector('div.mini-display')
 const submitButton = selectExistingBlockForm.querySelector('input.submit-button')
 selectBlockInput.addEventListener('change', function(event) {
@@ -131,32 +234,35 @@ selectBlockInput.addEventListener('change', function(event) {
     const existingBlockDisplay = workoutDisplay.querySelector(`div.card[data-id="${workoutId}"] div.one-block[data-id="${chosenBlock}"]`)
     const copyToDisplay = existingBlockDisplay.cloneNode(true)
 
-    // const miniDisplay = selectExistingBlockForm.querySelector('div.mini-display')
+    // remove previous previews if any
     if (miniDisplay.firstChild) { miniDisplay.firstChild.remove() }
     miniDisplay.appendChild(copyToDisplay)
 
+    // display select input that asks for Workout destination (choose the Workout to add existing Block to)
     divToSelectWorkoutToAddTo.style.display = ''
-    // const submitButton = selectExistingBlockForm.querySelector('input.submit-button')
+    // display submit button
     submitButton.style.display = ''
 })
 
+// submission handling on Add Existing Block to Workout form
 selectExistingBlockForm.addEventListener('submit', function(event) {
     event.preventDefault()
+    // debugger
 
+    // add chosen block display to destination Workout display card
     const blockInMiniDisplay = miniDisplay.querySelector('div')
     const destinationWorkoutId = event.target.destination.value
-    // debugger
-    // add to workout display card
     const workoutDisplayCard = workoutDisplay.querySelector(`div.card[data-id="${destinationWorkoutId}"] div.workout-info-top`)
     workoutDisplayCard.appendChild(blockInMiniDisplay)
 
-    // add to view card if open
+    // add to view card if it is open
     if (workoutViewContainer.style.display !== 'none' && workoutViewContainer.dataset.id == destinationWorkoutId) {
         const copy = blockInMiniDisplay.cloneNode(true)
         const container = viewCard.querySelector('div#block-set-container')
         container.appendChild(copy)
     }
 
+    // create new instance of WorkoutBlock (joining the selected existing Block to selected Workout)
     fetch('http://127.0.0.1:3000/workout_blocks', {
         method: 'POST',
         headers: {
@@ -169,18 +275,12 @@ selectExistingBlockForm.addEventListener('submit', function(event) {
         })
     })
 
+    // hide the following inputs in form
     selectBlockInput.style.display = 'none'
     divToSelectWorkoutToAddTo.style.display = 'none'
     submitButton.style.display = 'none'
 
     event.target.reset()
-})
-
-// show Block/Set form if at least 1 workout exists -- NEED TO IMPLEMENT!!!!!!!!!!!
-fetchWorkouts().then(function(workoutsArray) {
-    if (workoutsArray.length > 0) {
-        console.log("Line 74")
-    }
 })
 
 // add new ExerciseSet input field blocks in the Block/ExerciseSet form
@@ -279,103 +379,6 @@ async function createBlock(selectedWorkoutId, blockNameInput) {
     const data = await response.json()
     return data
 }
-
-// submit handling on create new Block & ExerciseSet(s) form
-blockExerciseSetForm.addEventListener('submit', async function(event) {
-    event.preventDefault()
-
-    // get array of all html input blocks that create new ExerciseSet
-    const allSetFormBlocks = Array.from(event.target.querySelectorAll('div.set-form-block'))
-    // for each html block in the array, extract input values into array
-    const inputValuesArray = allSetFormBlocks.map(function(setFormBlock) {
-        const selectInput = Number(setFormBlock.querySelector('select').value)
-        const inputsArray = Array.from(setFormBlock.querySelectorAll('input'))
-        const inputFields = inputsArray.map(inputElement => {
-            if (inputElement.value !== "") {
-                return Number(inputElement.value)
-            } else {
-                return null
-            }
-        })
-        // debugger
-        return [selectInput, ...inputFields]
-    })
-
-    // =======
-    // create ExerciseSet object for each element in array of inputvalue arrays
-    const exerciseSetObjectsArray = inputValuesArray.map(function(inputValues) {
-        const [ exerciseId, setReps, exerciseRepNum, activeTime, restTime, weight ] = inputValues
-        const exerciseSetObject = {
-            exercise_id: Number(exerciseId),
-            exercise_rep_num: exerciseRepNum,
-            active_time: activeTime,
-            rest_time: restTime,
-            weight: weight,
-        }
-        return exerciseSetObject
-    })
-    // debugger
-    // =======
-    
-    // selectedWorkoutInput NEEDS to have id as value
-    const [ blockNameInput, selectedWorkoutInput ] = event.target
-    const selectedWorkoutId = Number(selectedWorkoutInput.value)
-
-    const newBlock = await createBlock(selectedWorkoutId, blockNameInput)
-
-    createWorkoutBlock(newBlock.id, selectedWorkoutId)
-
-    // debugger
-
-    // render Block in the associated Workout display card
-    const workoutCardInfoContainer = document.querySelector(`div.card[data-id="${selectedWorkoutId}"] div.workout-info-top`)
-    renderBlock(newBlock, workoutCardInfoContainer)
-    // CAN PROB SIMPLIFY THIS (BELOW) BY USING QUERYSELECTORALL?????
-    if (workoutViewContainer.style.display !== 'none' && workoutViewContainer.dataset.id == selectedWorkoutId) {
-        renderBlock(newBlock, blockSetContainer)
-    }
-    const exerciseSetDisplayList = workoutCardInfoContainer.querySelector(`div.exercise-set-display[data-id="${newBlock.id}"]`)
-    const exerciseSetDisplayListViewCard = workoutViewContainer.querySelector(`div.exercise-set-display[data-id="${newBlock.id}"]`)
-    // create all ExerciseSets in provided ExerciseSet objects array
-    const newExerciseSets = await createExerciseSet(exerciseSetObjectsArray)
-
-    // extract set repetition numbers from array of ExerciseSet inputs
-    const setRepArray = inputValuesArray.map(function(inputValues) {
-        const [ exerciseId, setReps, exerciseRepNum, activeTime, restTime, weight ] = inputValues
-    
-        return Number(setReps)
-    })
-
-    const setRepetitionObjectsArray = []
-    
-    // create SetRepetition objects
-    for (let i = 0; i < setRepArray.length; i++) {
-        for (let j = 0; j < setRepArray[i]; j++) {
-            const oneObject = {
-                block_id: newBlock.id,
-                exercise_set_id: newExerciseSets[i].id,
-            }
-            setRepetitionObjectsArray.push(oneObject)
-
-            renderSet(newExerciseSets[i], exerciseSetDisplayList)
-            if (workoutViewContainer.style.display !== 'none' && workoutViewContainer.dataset.id == selectedWorkoutId) {
-                // add Edit and Delete buttons
-                let isFirstRepetition = false
-                if (j === 0) { // buttons to only first displayblock of repeating sets
-                    isFirstRepetition = true
-                }
-
-                renderSet(newExerciseSets[i], exerciseSetDisplayListViewCard, isFirstRepetition)
-            }
-        }
-    }
-
-    // debugger
-    createSetRepetitions(setRepetitionObjectsArray)
-    // toggleEditingMode("off")
-    // debugger
-    event.target.reset() // form reset
-})
 
 async function createSetRepetitions(setRepetitionObjectsArray) {
     fetch('http://127.0.0.1:3000/set_repetitions', {
