@@ -13,6 +13,10 @@
     because the entire form has an event listener. With every new interaction, the
     previous event listeners that were triggered are triggered again. 
     - will look into removeEventListener() in the future
+    - placeholder/default names for workouts and blocks don't reset after a
+    workout or block is deleted. have to refresh page to update the placeholder names
+    - lack of form validations & error message display
+    - issue with Add Existing Block to Workout (explained in comments around line 299)
 
 */
 
