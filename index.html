@@ -3,6 +3,9 @@
         <title>ReadySETGo</title>
         <link rel="stylesheet" type="text/css" href="style.css">
         <script src="src/index.js" defer></script>
+        <!-- <script src="https://cdn.jsdelivr.net/npm/easytimer@1.1.1/src/easytimer.min.js"></script> -->
+        <script src="https://cdn.jsdelivr.net/npm/easytimer.js@4.4.0/dist/easytimer.min.js"></script>
+        <!-- <script src="timer.js"></script> -->
     </head>
     <body>
         <div class="workout-display">
@@ -68,11 +71,21 @@
                             <p>Rest time: <span id="exercise-display-rest-time"></span></p>
                             <a id="exercise-display-link" target="_blank" href=""><caption>Info about this exercise</caption></a>
                             <div id="timers">
-                                <div id="active-timer">
-                                    
+                                <div id="active-timer-div" style="display: none;">
+                                    <br>
+                                    <h5>Active Timer</h5>
+                                    <div id="active-timer"></div>
+                                    <button id="start-active-timer-button" class="start-timer">Start</button>
+                                    <button id="pause-active-timer-button">Pause</button>
+                                    <button id="reset-active-timer-button">Reset</button>
                                 </div>
-                                <div id="rest-timer">
-
+                                <div id="rest-timer-div" style="display: none;">
+                                    <br>
+                                    <h5>Rest Timer</h5>
+                                    <div id="rest-timer"></div>
+                                    <button id="start-rest-timer-button" class="start-timer">Start</button>
+                                    <button id="pause-rest-timer-button">Pause</button>
+                                    <button id="reset-rest-timer-button">Reset</button>
                                 </div>
                             </div>
                             <div id="next-set-button" class="button-flex-end">
@@ -129,6 +142,7 @@
                 <input type="submit" name="submit" value="Create New Block" class="">
             </form>
             <form class="add-existing-block-form column">
+                <small>WARNING! This feature is not completely finalized and may mess up the order of your Workout blocks</small>
                 <h3>Add Existing Block to Workout</h3>
                 <label>Select a Block from ...</label><br>
                 <select name="workout_id" class="select-workout">

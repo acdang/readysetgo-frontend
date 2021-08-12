@@ -1,4 +1,3 @@
-
 const workoutForm = document.querySelector('form.create-workout-form')
 const workoutNameInput = document.querySelector('form.create-workout-form input#workout-name')
 const blockExerciseSetForm = document.querySelector('form.create-block-set-form')
@@ -60,10 +59,15 @@ function autoWorkoutNameValue(input) {
     input.value = input.placeholder
 }
 
-function exerciseSetDetailsLine(exerciseName, exerciseRepetitions) {
-    const singleOrPlural = exerciseRepetitions > 1 ? "repetitions" : "repetition"
+function exerciseSetDetailsLine(hasRepetitions, exerciseName, exerciseRepetitionsOrActiveTime) {
+    let singleOrPlural
+    if (hasRepetitions) {
+        singleOrPlural = exerciseRepetitionsOrActiveTime > 1 ? "repetitions" : "repetition"
+    } else {
+        singleOrPlural = exerciseRepetitionsOrActiveTime > 1 ? "seconds" : "second"
+    }
 
-    return `${exerciseName}, ${exerciseRepetitions} ${singleOrPlural}`
+    return `${exerciseName}, ${exerciseRepetitionsOrActiveTime} ${singleOrPlural}`
 }
 
 // submit handling on create new Workout form
@@ -106,8 +110,8 @@ workoutSelectExistingBlock.addEventListener('change', async function(event) {
     // debugger
     selectBlockInput.dataset.id = Number(event.target.value)
     selectBlockInput.style.display = ''
-
-    while (selectBlockInput.childNodes.length != 1) {
+   
+    while (selectBlockInput.querySelectorAll('option').length != 1) {
         selectBlockInput.lastChild.remove()
     }
 
@@ -514,7 +518,11 @@ function renderSet(exerciseSet, exerciseSetsDisplay, isFirstDisplay) {
     const infoSpan = document.createElement('span')
     infoSpan.className = 'set-info'
 
-    infoSpan.textContent = exerciseSetDetailsLine(exerciseSet.exercise.name, exerciseSet.exercise_rep_num)
+    if (exerciseSet.exercise_rep_num) {
+        infoSpan.textContent = exerciseSetDetailsLine(true, exerciseSet.exercise.name, exerciseSet.exercise_rep_num)
+    } else {
+        infoSpan.textContent = exerciseSetDetailsLine(false, exerciseSet.exercise.name, exerciseSet.active_time)
+    }
     oneSetDisplay.appendChild(infoSpan)
 
     if (arguments[2] && isFirstDisplay === true) {
@@ -612,6 +620,10 @@ viewCard.addEventListener('click', async function(event) {
         }
     } else if (event.target.matches('button#begin-workout-button')) {
         const workoutModeButton = event.target
+
+        const editingModeButton = viewCard.querySelector('button#editing-mode-button')
+        if (editingModeButton.className === "mode-on") { toggleEditingMode("off") }
+
         if (workoutModeButton.className === 'mode-off') {
             toggleWorkoutMode("on")
             // workoutModeButton.className = 'mode-on'
@@ -794,20 +806,20 @@ viewCard.addEventListener('click', async function(event) {
                 if (updatedSetRepetitions < origSetReps) {
                     // from view card
                     allSameBlocksInView.forEach(block => {
-                        let viewCardSets = block.querySelectorAll(`div.one-set`)
+                        let viewCardSets = block.querySelectorAll(`div.one-set[data-id="${selectedExerciseSetId}"]`)
                         while (viewCardSets.length != updatedSetRepetitions) {
                             const lastIndex = viewCardSets.length - 1
                             viewCardSets[lastIndex].remove()
-                            viewCardSets = block.querySelectorAll(`div.one-set`)
+                            viewCardSets = block.querySelectorAll(`div.one-set[data-id="${selectedExerciseSetId}"]`)
                         }
                     })
                     // from display card
                     allSameBlocksInDisplay.forEach(block => {
-                        let displayCardSets = block.querySelectorAll(`div.one-set`)
+                        let displayCardSets = block.querySelectorAll(`div.one-set[data-id="${selectedExerciseSetId}"]`)
                         while (displayCardSets.length != updatedSetRepetitions) {
                             const lastIndex = displayCardSets.length - 1
                             displayCardSets[lastIndex].remove()
-                            displayCardSets = block.querySelectorAll(`div.one-set`)
+                            displayCardSets = block.querySelectorAll(`div.one-set[data-id="${selectedExerciseSetId}"]`)
                         }
                     })
                     // delete SetRepetitions
@@ -827,12 +839,19 @@ viewCard.addEventListener('click', async function(event) {
                             }
                         })
                     })
+
+                    updateForm.style.display = 'none'
+
+                    // remove highlighting
+                    const allSetDivs = Array.from(viewCard.querySelectorAll('.currently-editing'))
+                    allSetDivs.forEach(div => div.classList.remove('currently-editing'))
+                    handleEditButtons(false)
                 }
                 // create new displays
                 if (updatedSetRepetitions > origSetReps) {
                     // to view card
                     allSameBlocksInView.forEach(block => {
-                        let viewCardSets = block.querySelectorAll(`div.one-set`)
+                        let viewCardSets = block.querySelectorAll(`div.one-set[data-id="${selectedExerciseSetId}"]`)
                         while (viewCardSets.length !== updatedSetRepetitions) {
                             const lastIndex = viewCardSets.length - 1
                             const newSetDisplay = viewCardSets[lastIndex].cloneNode(true)
@@ -841,8 +860,10 @@ viewCard.addEventListener('click', async function(event) {
                                 const buttons = newSetDisplay.querySelector('span.editing-mode-buttons')
                                 buttons.remove()
                             }
-                            viewCardSets[lastIndex].parentElement.appendChild(newSetDisplay)
-                            viewCardSets = block.querySelectorAll(`div.one-set`)
+                            // viewCardSets[lastIndex].parentElement.appendChild(newSetDisplay)
+                            const parent = viewCardSets[lastIndex].parentElement
+                            parent.insertBefore(newSetDisplay, viewCardSets[lastIndex].nextElementSibling)
+                            viewCardSets = block.querySelectorAll(`div.one-set[data-id="${selectedExerciseSetId}"]`)
                             // console.log('wha')
                             // setReps.placeholder = newSetReps
                             // handleEditButtons(false)
@@ -850,12 +871,15 @@ viewCard.addEventListener('click', async function(event) {
                     })
                     // to display card
                     allSameBlocksInDisplay.forEach(block => {
-                        let displayCardSets = block.querySelectorAll(`div.one-set`)
+                        let displayCardSets = block.querySelectorAll(`div.one-set[data-id="${selectedExerciseSetId}"]`)
                         while (displayCardSets.length != updatedSetRepetitions) {
                             const lastIndex = displayCardSets.length - 1
                             const newSetDisplay = displayCardSets[lastIndex].cloneNode(true)
-                            displayCardSets[lastIndex].parentElement.appendChild(newSetDisplay)
-                            displayCardSets = block.querySelectorAll(`div.one-set`)
+                            // displayCardSets[lastIndex].parentElement.appendChild(newSetDisplay)
+                            const parent = displayCardSets[lastIndex].parentElement
+                            parent.insertBefore(newSetDisplay, displayCardSets[lastIndex].nextElementSibling)
+                            // displayCardSets[lastIndex].nextElementSibling.insertBefore(newSetDisplay)
+                            displayCardSets = block.querySelectorAll(`div.one-set[data-id="${selectedExerciseSetId}"]`)
                         }
                     })
 
@@ -875,22 +899,45 @@ viewCard.addEventListener('click', async function(event) {
                             }
                         })
                     })
+                    updateForm.style.display = 'none'
+
+                    // remove highlighting
+                    const allSetDivs = Array.from(viewCard.querySelectorAll('.currently-editing'))
+                    allSetDivs.forEach(div => div.classList.remove('currently-editing'))
+                    handleEditButtons(false)
                 }
             }
             // update text if new
-            if (updatedDataHash.exercise_id || updatedDataHash.exercise_rep_num) {
+            if (updatedDataHash.exercise_id || updatedDataHash.exercise_rep_num || updatedDataHash.active_time) {
                 const allInDisplayCards = workoutDisplay.querySelectorAll(`div.one-set[data-id="${selectedExerciseSetId}"]`)
                 const allInViewCard = viewCard.querySelectorAll(`div.one-set[data-id="${selectedExerciseSetId}"] span.set-info`)
                 const exerciseObj = await fetchExerciseById(updatedDataHash.exercise_id)
+                // if both exercise and num of exercise reps changed
                 if (updatedDataHash.exercise_id && updatedDataHash.exercise_rep_num) {
-                    allInDisplayCards.forEach(element => element.textContent = exerciseSetDetailsLine(exerciseObj.name, updatedDataHash.exercise_rep_num))
-                    allInViewCard.forEach(element => element.textContent = exerciseSetDetailsLine(exerciseObj.name, updatedDataHash.exercise_rep_num))
-                } else if (updatedDataHash.exercise_id) {
-                    allInDisplayCards.forEach(element => element.textContent = exerciseSetDetailsLine(exerciseObj.name, selectedSet.exercise_rep_num))
-                    allInViewCard.forEach(element => element.textContent = exerciseSetDetailsLine(exerciseObj.name, selectedSet.exercise_rep_num))
+                    allInDisplayCards.forEach(element => element.textContent = exerciseSetDetailsLine(true, exerciseObj.name, updatedDataHash.exercise_rep_num))
+                    allInViewCard.forEach(element => element.textContent = exerciseSetDetailsLine(true, exerciseObj.name, updatedDataHash.exercise_rep_num))
+                // if both exercise and active time changed
+                } else if (updatedDataHash.exercise_id && updatedDataHash.active_time) {
+                    allInDisplayCards.forEach(element => element.textContent = exerciseSetDetailsLine(false, exerciseObj.name, updatedDataHash.active_time))
+                    allInViewCard.forEach(element => element.textContent = exerciseSetDetailsLine(false, exerciseObj.name, updatedDataHash.active_time))
+                }
+                // if only exercise changed
+                else if (updatedDataHash.exercise_id) {
+                    if (selectedSet.exercise_rep_num) {
+                        allInDisplayCards.forEach(element => element.textContent = exerciseSetDetailsLine(true, exerciseObj.name, selectedSet.exercise_rep_num))
+                        allInViewCard.forEach(element => element.textContent = exerciseSetDetailsLine(true, exerciseObj.name, selectedSet.exercise_rep_num))    
+                    } else {
+                        allInDisplayCards.forEach(element => element.textContent = exerciseSetDetailsLine(false, exerciseObj.name, selectedSet.active_time))
+                        allInViewCard.forEach(element => element.textContent = exerciseSetDetailsLine(false, exerciseObj.name, selectedSet.active_time))    
+                    }
+                // if only num of exercise reps changed
                 } else if (updatedDataHash.exercise_rep_num) {
-                    allInDisplayCards.forEach(element => element.textContent = exerciseSetDetailsLine(selectedSet.exercise.name, updatedDataHash.exercise_rep_num))
-                    allInViewCard.forEach(element => element.textContent = exerciseSetDetailsLine(selectedSet.exercise.name, updatedDataHash.exercise_rep_num))
+                    allInDisplayCards.forEach(element => element.textContent = exerciseSetDetailsLine(true, selectedSet.exercise.name, updatedDataHash.exercise_rep_num))
+                    allInViewCard.forEach(element => element.textContent = exerciseSetDetailsLine(true, selectedSet.exercise.name, updatedDataHash.exercise_rep_num))
+                // if only active time changed
+                } else if (updatedDataHash.active_time) {
+                    allInDisplayCards.forEach(element => element.textContent = exerciseSetDetailsLine(false, selectedSet.exercise.name, updatedDataHash.active_time))
+                    allInViewCard.forEach(element => element.textContent = exerciseSetDetailsLine(false, selectedSet.exercise.name, updatedDataHash.active_time))
                 }
             }
 
@@ -907,17 +954,19 @@ viewCard.addEventListener('click', async function(event) {
                 const updatedExerciseSet = await response.json()
                 // console.log(updatedDataHash)
                 // just change text content + number of applicable ExerciseSet displays
-                form.reset()
-                exerciseSelect.value = updatedExerciseSet.exercise.id
+                // form.reset()
+                // exerciseSelect.value = updatedExerciseSet.exercise.id
                 
-                const currentBlockObj = await fetchBlockById(currentBlockId)
-                const newSetReps = currentBlockObj.exercise_sets.filter(set => set.id === selectedExerciseSetId).length
-                setReps.placeholder = newSetReps
+                // const currentBlockObj = await fetchBlockById(currentBlockId)
+                // const newSetReps = currentBlockObj.exercise_sets.filter(set => set.id === selectedExerciseSetId).length
+                // setReps.placeholder = newSetReps
 
-                exerciseReps.placeholder = updatedExerciseSet.exercise_rep_num ? updatedExerciseSet.exercise_rep_num : ""
-                activeTime.placeholder = updatedExerciseSet.active_time ? updatedExerciseSet.active_time : ""
-                restTime.placeholder = updatedExerciseSet.rest_time ? updatedExerciseSet.rest_time : ""
-                weight.placeholder = updatedExerciseSet.weight ? updatedExerciseSet.weight : ""
+                // exerciseReps.placeholder = updatedExerciseSet.exercise_rep_num ? updatedExerciseSet.exercise_rep_num : ""
+                // activeTime.placeholder = updatedExerciseSet.active_time ? updatedExerciseSet.active_time : ""
+                // restTime.placeholder = updatedExerciseSet.rest_time ? updatedExerciseSet.rest_time : ""
+                // weight.placeholder = updatedExerciseSet.weight ? updatedExerciseSet.weight : ""
+
+                updateForm.style.display = 'none'
 
                 // remove highlighting
                 allSameDivs.forEach(div => div.classList.remove('currently-editing'))
@@ -1000,6 +1049,29 @@ async function toggleWorkoutMode(mode) {
     }
 }
 
+const restTimer = new easytimer.Timer()
+const activeTimer = new easytimer.Timer()
+
+restTimer.addEventListener('secondsUpdated', function(event) {
+    document.querySelector('#rest-timer').textContent = restTimer.getTimeValues().toString()
+})
+restTimer.addEventListener('started', function (e) {
+    document.querySelector('#rest-timer').textContent = restTimer.getTimeValues().toString()
+});
+restTimer.addEventListener('reset', function (e) {
+    document.querySelector('#rest-timer').textContent = restTimer.getTimeValues().toString()
+});
+
+activeTimer.addEventListener('secondsUpdated', function(event) {
+    document.querySelector('#active-timer').textContent = activeTimer.getTimeValues().toString()
+})
+activeTimer.addEventListener('started', function (e) {
+    document.querySelector('#active-timer').textContent = activeTimer.getTimeValues().toString()
+});
+activeTimer.addEventListener('reset', function (e) {
+    document.querySelector('#active-timer').textContent = activeTimer.getTimeValues().toString()
+});
+
 function displayExerciseInfo(firstSet, htmlElement) {
     // highlight the div
     htmlElement.classList.add('currently-viewing')
@@ -1023,6 +1095,33 @@ function displayExerciseInfo(firstSet, htmlElement) {
     }
     if (firstSet.active_time) {
         activeTime.textContent = firstSet.active_time > 1 ? `${firstSet.active_time} seconds` : `${firstSet.active_time} second`
+
+        const activeTimerDiv = exerciseDisplayDiv.querySelector('div#active-timer-div')
+        activeTimerDiv.style.display = ''
+        const activeTimerDisplay = activeTimerDiv.querySelector('div#active-timer')
+        const display = new Date(firstSet.active_time * 1000).toISOString().substr(11, 8)
+        activeTimerDisplay.textContent = display
+
+        const activeTimerButton = activeTimerDiv.querySelector('button#start-active-timer-button')
+        activeTimerButton.addEventListener('click', function(event) {
+            const button = event.target
+            if (button.className === 'start-timer') {
+                activeTimer.start({countdown: true, startValues: {seconds: firstSet.active_time}});
+                activeTimerDisplay.textContent = activeTimer.getTimeValues().toString()
+
+                // button.textContent = "Pause"
+                // button.className = 'pause-timer'
+            }
+        })
+        const resetButton = activeTimerDiv.querySelector('button#reset-active-timer-button')
+        resetButton.addEventListener('click', function(event) {
+            activeTimer.reset()
+            activeTimer.stop()
+        })
+        const pauseButton = activeTimerDiv.querySelector('button#pause-active-timer-button')
+        pauseButton.addEventListener('click', function(event) {
+            activeTimer.pause()
+        })
     } else {
         activeTime.style.display = 'none'
     }
@@ -1035,6 +1134,33 @@ function displayExerciseInfo(firstSet, htmlElement) {
     if (firstSet.rest_time) {
         const restTime = exerciseDisplayDiv.querySelector('span#exercise-display-rest-time')
         restTime.textContent = firstSet.rest_time > 1 ? `${firstSet.rest_time} seconds` : `${firstSet.rest_time} second`
+
+        const restTimerDiv = exerciseDisplayDiv.querySelector('div#rest-timer-div')
+        restTimerDiv.style.display = ''
+        const restTimerDisplay = restTimerDiv.querySelector('div#rest-timer')
+        const display = new Date(firstSet.rest_time * 1000).toISOString().substr(11, 8)
+        restTimerDisplay.textContent = display
+
+        const restTimerButton = restTimerDiv.querySelector('button#start-rest-timer-button')
+        restTimerButton.addEventListener('click', function(event) {
+            const button = event.target
+            if (button.className === 'start-timer') {
+                restTimer.start({countdown: true, startValues: {seconds: firstSet.rest_time}});
+                restTimerDisplay.textContent = restTimer.getTimeValues().toString()
+
+                // button.textContent = "Pause"
+                // button.className = 'pause-timer'
+            }
+        })
+        const resetButton = restTimerDiv.querySelector('button#reset-rest-timer-button')
+        resetButton.addEventListener('click', function(event) {
+            restTimer.reset()
+            restTimer.stop()
+        })
+        const pauseButton = restTimerDiv.querySelector('button#pause-rest-timer-button')
+        pauseButton.addEventListener('click', function(event) {
+            restTimer.pause()
+        })
     }
     // link display
     const refLink = exerciseDisplayDiv.querySelector('a#exercise-display-link')
