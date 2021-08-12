@@ -163,6 +163,13 @@ body {
 .currently-editing {
     background-color: #bfe4d4;
 }
+.cancel-edit-button {
+    background-color: black;
+    color:white;
+    border: none;
+    border-radius: 5px;
+    padding: 0.7em;
+}
 
 /* BUTTONS */
 button {

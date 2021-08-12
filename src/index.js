@@ -1,6 +1,21 @@
 // console logs and debugger lines have been left in as comments
 // to demonstrate my debugging process (Perserverance category in rubric)
 
+/* 
+    Some issues I am aware of but didn't have time to fix:
+    - sometimes, changing an ExerciseSet's num of set repetition (in edit form)
+    will cause an extra set reptitions to be added/removed. 
+        For ex - changing "ExerciseSet 1" from 3 set reps to 2 set reps
+        will result in "ExerciseSet 1" containing only 1 set rep
+    - sometimes, editing the num of set reps of an ExerciseSet twice 
+    without refreshing the page freezes the app (likely result of infinite loop)
+    - the update form in general can be messy and unpredictable. I believe it is
+    because the entire form has an event listener. With every new interaction, the
+    previous event listeners that were triggered are triggered again. 
+    - will look into removeEventListener() in the future
+
+*/
+
 const workoutForm = document.querySelector('form.create-workout-form')
 const workoutNameInput = document.querySelector('form.create-workout-form input#workout-name')
 const blockExerciseSetForm = document.querySelector('form.create-block-set-form')
@@ -525,7 +540,13 @@ function renderBlock(block, selectedDiv) {
     exerciseSetsDisplay.className = 'exercise-set-display'
     exerciseSetsDisplay.dataset.id = block.id
 
-    const exerciseSetsArray = block.exercise_sets // need to have `has_many :exercise_sets` in Block serializer
+    // need to have `has_many :exercise_sets` in Block serializer
+    let exerciseSetsArray = block.exercise_sets
+
+    // sort by ExerciseSet id
+    exerciseSetsArray.sort(function(a, b) {
+        return a.id - b.id;
+    })
 
     // render delete Block button in view card
     if (selectedDiv === blockSetContainer) {
@@ -655,7 +676,7 @@ closeDisplayButtom.addEventListener('click', function() {
 })
 
 // event handling in Workout view card
-viewCard.addEventListener('click', async function(event) {
+viewCard.addEventListener('click', async function handler(event) {
     // editing mode button
     if (event.target.matches('input[type="checkbox"]')) {
         const editModeButton = event.target
@@ -760,6 +781,7 @@ viewCard.addEventListener('click', async function(event) {
     // }
     // editing a set
     else if (event.target.matches('button.edit-set-button')) {
+        // event.currentTarget.removeEventListener(event.type, handler); // <--- doing this would allow event to happen only once
         handleEditButtons(true)
         const editSetButton = event.target
 
@@ -785,15 +807,20 @@ viewCard.addEventListener('click', async function(event) {
         // pre-fill fields with current values
         // display appropriate placeholders in form (if existing values, display as placeholder)
         const exerciseSelect = updateForm.querySelector('select')
-        const inputFieldElementsArray = updateForm.querySelectorAll('input')
+        const inputFieldElementsArray = updateForm.querySelectorAll('input:not([type=submit])')
         const [ setReps, exerciseReps, activeTime, restTime, weight ] = inputFieldElementsArray
+
+        // remove values if any
+        inputFieldElementsArray.forEach(field => field.value = '')
 
         const currentBlockId = Number(editSetButton.closest('div.one-block').dataset.id)
         const currentBlockObj = await fetchBlockById(currentBlockId)
         const origSetReps = currentBlockObj.exercise_sets.filter(set => set.id === selectedExerciseSetId).length
         // debugger
         exerciseSelect.value = selectedSet.exercise.id
+        
         setReps.placeholder = origSetReps
+        // debugger
         exerciseReps.placeholder = selectedSet.exercise_rep_num ? selectedSet.exercise_rep_num : ""
         activeTime.placeholder = selectedSet.active_time ? selectedSet.active_time : ""
         restTime.placeholder = selectedSet.rest_time ? selectedSet.rest_time : ""
@@ -857,6 +884,8 @@ viewCard.addEventListener('click', async function(event) {
                 const allSameBlocksInView = viewCard.querySelectorAll(`div.one-block[data-id="${currentBlockId}"]`)
                 const allSameBlocksInDisplay = workoutDisplay.querySelectorAll(`div.one-block[data-id="${currentBlockId}"]`)
 
+                console.log(updatedSetRepetitions)
+                console.log(origSetReps)
                 // remove excess displays if new set rep num is smaller
                 if (updatedSetRepetitions < origSetReps) {
                     // from view card
