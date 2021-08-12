@@ -405,6 +405,9 @@ addExerciseSetButton.addEventListener('click', function() {
         inputField.value = ''
         if (inputField.disabled) { inputField.disabled = false }
     })
+
+    // exerciseset repetition default input back to 1
+    allInputs[0].value = 1
     
     const lineBreak = document.createElement('hr')
     
